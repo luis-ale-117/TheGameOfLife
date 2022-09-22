@@ -7,15 +7,16 @@ package com.thegameoflife.thegameoflife;
 
 /**
  *
- * @author lalex
+ * @author Luis Alejandro Mendoza Franco
+ * @email lalexmf117@gmail.com
+ * 
  */
 public class TheGameOfLife {
-
-    /**
-     * @param args the command line arguments
-     */
+    
     public static void main(String[] args) {
-        // TODO code application logic here
+        MainWindow w = new MainWindow();
+        //w.createWorld();
+        //w.startSimulation();
     }
     
 }
