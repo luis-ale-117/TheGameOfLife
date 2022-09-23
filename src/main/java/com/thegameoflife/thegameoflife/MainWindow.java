@@ -53,7 +53,7 @@ public class MainWindow extends JFrame {
     private JMenuBar menuBar;
     private JMenu file,editMenu;
     private JMenuItem openFile,saveFile;
-    private JMenuItem editWolrdColors,editWroldType;
+    private JMenuItem editWolrdColors,editWroldType,randomness;
     private JToolBar toolbar;
     private JButton pauseAndPlay,edit,random,erase;
     private JComboBox zoomOptions, speedOptions;
@@ -62,6 +62,8 @@ public class MainWindow extends JFrame {
     private boolean runGOL, generateRandomFlag, eraseFlag, editFlag, cellEditedFlag;
     private double randomProbability;
     private int nextStateTime;
+    private double[] zoomValues = {0.25,0.5,1,1.5,2};
+    private int[] speedValues = {2000,1000,500,100,50};//Miliseconds
     
     
     public MainWindow(){
@@ -132,6 +134,7 @@ public class MainWindow extends JFrame {
         file =  new JMenu();
         editWolrdColors = new JMenuItem();
         editWroldType = new JMenuItem();
+        randomness = new JMenuItem();
         editMenu =  new JMenu();
         menuBar = new JMenuBar();
         file.setText("File");
@@ -142,8 +145,10 @@ public class MainWindow extends JFrame {
         editMenu.setText("Edit");
         editWolrdColors.setText("World color");
         editWroldType.setText("World type");
+        randomness.setText("Randomness");
         editMenu.add(editWolrdColors);
         editMenu.add(editWroldType);
+        editMenu.add(randomness);
         menuBar.add(file);
         menuBar.add(editMenu);
         this.setJMenuBar(menuBar);
@@ -209,12 +214,8 @@ public class MainWindow extends JFrame {
         zoomOptions.setCursor(new Cursor(Cursor.HAND_CURSOR));
         zoomOptions.setToolTipText("Zoom");
         zoomOptions.setEnabled(true);
-        zoomOptions.addItem("25%");
-        zoomOptions.addItem("50%");
-        zoomOptions.addItem("100%");
-        zoomOptions.addItem("150%");
-        zoomOptions.addItem("200%");
-        zoomOptions.setSelectedIndex(2);
+        for(double zoom: zoomValues) zoomOptions.addItem((int)(zoom*100)+"%");
+        zoomOptions.setSelectedItem("100%");
         //Speed options
         speedIcon = new JLabel();
         speedIcon.setBounds(BUTTON_LENGTH*7+COMBOBOX_LENGTH+5, 0, BUTTON_LENGTH,TOOLBAR_SIZE );
@@ -298,6 +299,30 @@ public class MainWindow extends JFrame {
             }
             editFlag = !editFlag;
         });
+        worldPanel.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e){
+                if(editFlag){
+                    int cellPosX = (int)(e.getX()/(CELLS_PIXELS*zoomValues[zoomOptions.getSelectedIndex()]));
+                    int cellPosY = (int)(e.getY()/(CELLS_PIXELS*zoomValues[zoomOptions.getSelectedIndex()]));
+                    if((e.getModifiersEx()&MOUSE_BUTTON_DOWN)==RIGHT_BUTTON_DOWN) worldPanel.setWorldPanelCellAsAlive(cellPosX,cellPosY);
+                    else if((e.getModifiersEx()&MOUSE_BUTTON_DOWN)==LEFT_BUTTON_DOWN) worldPanel.setWorldPanelCellAsDeath(cellPosX,cellPosY);
+                    setInfoInLabels();
+                }
+            }
+        });
+        worldPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e){
+                if(editFlag){
+                    int cellPosX = (int)(e.getX()/(CELLS_PIXELS*zoomValues[zoomOptions.getSelectedIndex()]));
+                    int cellPosY = (int)(e.getY()/(CELLS_PIXELS*zoomValues[zoomOptions.getSelectedIndex()]));
+                    if(e.getButton() == RIGHT_CLICK) worldPanel.setWorldPanelCellAsAlive(cellPosX,cellPosY);
+                    else if(e.getButton() == LEFT_CLICK)  worldPanel.setWorldPanelCellAsDeath(cellPosX,cellPosY);
+                    setInfoInLabels();
+                }
+            }
+        });
         random.addActionListener((ActionEvent e) -> {
             runGOL = false;
             pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
@@ -310,25 +335,9 @@ public class MainWindow extends JFrame {
             pauseAndPlay.setToolTipText("Play");
             eraseFlag = true;
         });
-        worldPanel.addMouseMotionListener(new MouseMotionAdapter() {
-            @Override
-            public void mouseDragged(MouseEvent e){
-                if(editFlag){
-                    if((e.getModifiersEx()&MOUSE_BUTTON_DOWN)==RIGHT_BUTTON_DOWN) worldPanel.setWorldPanelCellAsAlive(e.getX()/CELLS_PIXELS,e.getY()/CELLS_PIXELS);
-                    else if((e.getModifiersEx()&MOUSE_BUTTON_DOWN)==LEFT_BUTTON_DOWN) worldPanel.setWorldPanelCellAsDeath(e.getX()/CELLS_PIXELS,e.getY()/CELLS_PIXELS);
-                    setInfoInLabels();
-                }
-            }
-        });
-        worldPanel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e){
-                if(editFlag){
-                    if(e.getButton() == RIGHT_CLICK) worldPanel.setWorldPanelCellAsAlive(e.getX()/CELLS_PIXELS,e.getY()/CELLS_PIXELS);
-                    else if(e.getButton() == LEFT_CLICK)  worldPanel.setWorldPanelCellAsDeath(e.getX()/CELLS_PIXELS,e.getY()/CELLS_PIXELS);
-                    setInfoInLabels();
-                }
-            }
+        zoomOptions.addActionListener((ActionEvent e) -> {
+            worldPanel.setWorldPanelSize((int)(CELLS_PIXELS*CELLS_X*zoomValues[zoomOptions.getSelectedIndex()]),(int)(CELLS_PIXELS*CELLS_Y*zoomValues[zoomOptions.getSelectedIndex()]));
+            worldScroller.setViewportView(worldPanel);
         });
     }
 }

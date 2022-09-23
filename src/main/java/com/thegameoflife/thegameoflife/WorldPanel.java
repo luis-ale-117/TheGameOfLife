@@ -17,7 +17,7 @@ import javax.swing.JLabel;
  */
 public class WorldPanel extends JLabel{
     private static final int REFRESH_TIME = 200;
-    private int pixelsX,pixelsY;
+    private int pixelsX,pixelsY,zoomPixelsX,zoomPixelsY;
     private int cellPixels,cellsX,cellsY;
     private BufferedImage worldImage;
     private Graphics worldDraw;
@@ -30,6 +30,8 @@ public class WorldPanel extends JLabel{
         cellsY = cellsInY;
         pixelsX = cellPixels * cellsX;
         pixelsY = cellPixels * cellsY;
+        zoomPixelsX = pixelsX;
+        zoomPixelsY = pixelsY;
         this.setPreferredSize(new Dimension(pixelsX,pixelsY));
         world = new GOLWorld(cellsX,cellsY);
         worldImage = new BufferedImage(pixelsX,pixelsY,BufferedImage.TYPE_INT_RGB);
@@ -40,9 +42,9 @@ public class WorldPanel extends JLabel{
         worldDraw.fillRect(0, 0, pixelsX-1, pixelsY-1);
     }
     public void setWorldPanelSize(int x, int y){
-        pixelsX = x;
-        pixelsY = y;
-        this.setPreferredSize(new Dimension(pixelsX,pixelsY));
+        zoomPixelsX = x;
+        zoomPixelsY = y;
+        this.setPreferredSize(new Dimension(zoomPixelsX,zoomPixelsY));
     }
     public void eraseWorldPanel(){
         worldDraw.setColor(Color.BLACK);
@@ -118,7 +120,7 @@ public class WorldPanel extends JLabel{
     }
     @Override
     public void paintComponent(Graphics g){
-        g.drawImage(worldImage, 0, 0,pixelsX,pixelsY,this);
+        g.drawImage(worldImage, 0, 0,zoomPixelsX,zoomPixelsY,this);
         g.dispose();
     }
 }
