@@ -8,10 +8,21 @@ package com.thegameoflife.thegameoflife;
 /**
  *
  * @author lalex
+ * Lock class is used to share states between objects so they can determine
+ * its actions
  */
 public class Lock {
-    boolean value;
+    private boolean value;
     Lock(){
         value = false;
+    }
+    public boolean getValue(){
+        return value;
+    }
+    public void setValue(boolean v){
+        value = v;
+    }
+    public void switchValue(){
+        value = !value;
     }
 }

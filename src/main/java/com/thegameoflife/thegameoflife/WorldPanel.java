@@ -22,7 +22,7 @@ public class WorldPanel extends JLabel implements Runnable{
     private BufferedImage worldImage;
     private Graphics worldDraw;
     private GOLWorld world;
-    
+    private JLabel generationLabel,aliveLabel,deathLabel;
     private Lock runGOL;
     private int nextStateTime;
     
@@ -37,12 +37,15 @@ public class WorldPanel extends JLabel implements Runnable{
         world = new GOLWorld(cellsX,cellsY);
         worldImage = new BufferedImage(pixelsX,pixelsY,BufferedImage.TYPE_INT_RGB);
         worldDraw = worldImage.createGraphics();
-        initBlankWorld();
-        nextStateTime = 200;
+        //initBlankWorld();
+        nextStateTime = 100;
     }
     public void initBlankWorld(){
         worldDraw.setColor(Color.BLACK);
         worldDraw.fillRect(0, 0, pixelsX-1, pixelsY-1);
+        generationLabel.setText("Gen: "+world.getGeneration());
+        aliveLabel.setText("Alive: "+world.getAliveCells());
+        deathLabel.setText("Death: "+world.getDeathCells());
     }
     public void setWorldPanelSize(int x, int y){
         pixelsX = x;
@@ -53,6 +56,9 @@ public class WorldPanel extends JLabel implements Runnable{
         worldDraw.setColor(Color.BLACK);
         worldDraw.fillRect(0, 0, pixelsX-1, pixelsY-1);
         world.eraseWorld();
+        generationLabel.setText("Gen: "+world.getGeneration());
+        aliveLabel.setText("Alive: "+world.getAliveCells());
+        deathLabel.setText("Death: "+world.getDeathCells());
     }
     private void paintWorldPanel(){
         for(int y=0;y<cellsY;y++){
@@ -77,6 +83,9 @@ public class WorldPanel extends JLabel implements Runnable{
         world.generateRandomWorld(aliveProbability);
         initBlankWorld();
         paintWorldPanel();
+        generationLabel.setText("Gen: "+world.getGeneration());
+        aliveLabel.setText("Alive: "+world.getAliveCells());
+        deathLabel.setText("Death: "+world.getDeathCells());
     }
     public void setWorldPanelCellAsAlive(int x, int y){
         if(world.isCellDeath(x, y)){
@@ -116,6 +125,11 @@ public class WorldPanel extends JLabel implements Runnable{
     public int getPixelsY() {
         return pixelsY;
     }
+    public void setInfoLables(JLabel gen,JLabel alive, JLabel death){
+        generationLabel = gen;
+        aliveLabel = alive;
+        deathLabel = death;
+    }
     
     @Override
     public void paintComponent(Graphics g){
@@ -128,21 +142,24 @@ public class WorldPanel extends JLabel implements Runnable{
     @Override
     public void run() {
         while(true){
-                if(runGOL.value){
-                    nextWorldPanelState();
-                    try {
-                        Thread.sleep(nextStateTime);
-                    } catch (InterruptedException ex) {
-                        System.err.println("ERROR: Sleep failed...");
-                    }
-                }else{                    
-                    repaint();
-                    try {
-                        Thread.sleep(REFRESH_TIME);
-                    } catch (InterruptedException ex) {
-                        System.err.println("ERROR: Sleep failed...");
-                    }
+            if(runGOL.getValue()){
+                nextWorldPanelState();
+                generationLabel.setText("Gen: "+world.getGeneration());
+                aliveLabel.setText("Alive: "+world.getAliveCells());
+                deathLabel.setText("Death: "+world.getDeathCells());
+                try {
+                    Thread.sleep(nextStateTime);
+                } catch (InterruptedException ex) {
+                    System.err.println("ERROR: Sleep failed...");
                 }
+            }else{                    
+                repaint();
+                try {
+                    Thread.sleep(REFRESH_TIME);
+                } catch (InterruptedException ex) {
+                    System.err.println("ERROR: Sleep failed...");
+                }
+            }
         }
     }
 }

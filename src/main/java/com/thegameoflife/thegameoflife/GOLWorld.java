@@ -14,7 +14,7 @@ public class GOLWorld {
     private static final byte ALIVE=1;
     private static final byte[] STATES = {DEATH,ALIVE};
     
-    private int deathCells, aliveCells;
+    private int deathCells, aliveCells, generation;
     private boolean toroidalWorld;
     private final int gridSizeX, gridSizeY;
     private byte[][] currentWorld,previousWorld;
@@ -30,6 +30,7 @@ public class GOLWorld {
         gridSizeY = y;
         deathCells = x*y;
         aliveCells=0;
+        generation = 0;
         //Conway's game of life rules
         setRule("3","23");
         nonToroidalBorderState = DEATH;
@@ -116,6 +117,7 @@ public class GOLWorld {
             }
         }
         deathCells -= aliveCells;
+        generation++;
         byte[][] w = currentWorld;
         currentWorld = previousWorld;
         previousWorld = w;
@@ -146,10 +148,14 @@ public class GOLWorld {
     public int getDeathCells(){
         return deathCells;
     }
+    public int getGeneration(){
+        return generation;
+    }
     public boolean cellChangedState(int x,int y){
         return currentWorld[y][x] != previousWorld[y][x];
     }
     public void eraseWorld(){
+        generation = 0;
         aliveCells = 0;
         deathCells = (gridSizeX)*(gridSizeY);
         for(int y=0;y<gridSizeY;y++){
@@ -160,6 +166,7 @@ public class GOLWorld {
     }
     public void generateRandomWorld(double aliveProbability){
         double percentage = aliveProbability*0.01;
+        generation = 0;
         aliveCells = 0;
         deathCells = (gridSizeX)*(gridSizeY);
         for(int y=0;y<gridSizeY;y++){
