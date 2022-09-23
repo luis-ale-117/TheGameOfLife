@@ -15,16 +15,13 @@ import javax.swing.JLabel;
  *
  * @author lalex
  */
-public class WorldPanel extends JLabel implements Runnable{
+public class WorldPanel extends JLabel{
     private static final int REFRESH_TIME = 200;
     private int pixelsX,pixelsY;
     private int cellPixels,cellsX,cellsY;
     private BufferedImage worldImage;
     private Graphics worldDraw;
     private GOLWorld world;
-    private JLabel generationLabel,aliveLabel,deathLabel;
-    private Lock runGOL;
-    private int nextStateTime;
     
     WorldPanel(int pixels, int cellsInX, int cellsInY){//Puede ser rectangular
         super();
@@ -37,15 +34,10 @@ public class WorldPanel extends JLabel implements Runnable{
         world = new GOLWorld(cellsX,cellsY);
         worldImage = new BufferedImage(pixelsX,pixelsY,BufferedImage.TYPE_INT_RGB);
         worldDraw = worldImage.createGraphics();
-        //initBlankWorld();
-        nextStateTime = 100;
     }
     public void initBlankWorld(){
         worldDraw.setColor(Color.BLACK);
         worldDraw.fillRect(0, 0, pixelsX-1, pixelsY-1);
-        generationLabel.setText("Gen: "+world.getGeneration());
-        aliveLabel.setText("Alive: "+world.getAliveCells());
-        deathLabel.setText("Death: "+world.getDeathCells());
     }
     public void setWorldPanelSize(int x, int y){
         pixelsX = x;
@@ -56,9 +48,6 @@ public class WorldPanel extends JLabel implements Runnable{
         worldDraw.setColor(Color.BLACK);
         worldDraw.fillRect(0, 0, pixelsX-1, pixelsY-1);
         world.eraseWorld();
-        generationLabel.setText("Gen: "+world.getGeneration());
-        aliveLabel.setText("Alive: "+world.getAliveCells());
-        deathLabel.setText("Death: "+world.getDeathCells());
     }
     private void paintWorldPanel(){
         for(int y=0;y<cellsY;y++){
@@ -83,23 +72,22 @@ public class WorldPanel extends JLabel implements Runnable{
         world.generateRandomWorld(aliveProbability);
         initBlankWorld();
         paintWorldPanel();
-        generationLabel.setText("Gen: "+world.getGeneration());
-        aliveLabel.setText("Alive: "+world.getAliveCells());
-        deathLabel.setText("Death: "+world.getDeathCells());
     }
     public void setWorldPanelCellAsAlive(int x, int y){
         if(world.isCellDeath(x, y)){
+            world.setCellAsAlive(x, y);
             worldDraw.setColor(Color.WHITE);
             worldDraw.fillRect(x*cellPixels,y*cellPixels, cellPixels,cellPixels);
         }
-        paintWorldPanel();
+        repaint();
     }
     public void setWorldPanelCellAsDeath(int x, int y){
         if(world.isCellAlive(x, y)){
+            world.setCellAsDeath(x, y);
             worldDraw.setColor(Color.BLACK);
             worldDraw.fillRect(x*cellPixels,y*cellPixels, cellPixels,cellPixels);
         }
-        paintWorldPanel();
+        repaint();
     }
     public void setWorldPanelAsToroidal(){
         world.setToroidal();
@@ -113,6 +101,9 @@ public class WorldPanel extends JLabel implements Runnable{
     public String getWorldPanelRule(){
         return world.getRuleAsString();
     }
+    public int getWorldPanelGeneration(){
+        return world.getGeneration();
+    }
     public int getWorldPanelAliveCells(){
         return world.getAliveCells();
     }
@@ -125,41 +116,9 @@ public class WorldPanel extends JLabel implements Runnable{
     public int getPixelsY() {
         return pixelsY;
     }
-    public void setInfoLables(JLabel gen,JLabel alive, JLabel death){
-        generationLabel = gen;
-        aliveLabel = alive;
-        deathLabel = death;
-    }
-    
     @Override
     public void paintComponent(Graphics g){
         g.drawImage(worldImage, 0, 0,pixelsX,pixelsY,this);
         g.dispose();
-    }
-    public void setLockGOL(Lock lock){
-        runGOL = lock;
-    }
-    @Override
-    public void run() {
-        while(true){
-            if(runGOL.getValue()){
-                nextWorldPanelState();
-                generationLabel.setText("Gen: "+world.getGeneration());
-                aliveLabel.setText("Alive: "+world.getAliveCells());
-                deathLabel.setText("Death: "+world.getDeathCells());
-                try {
-                    Thread.sleep(nextStateTime);
-                } catch (InterruptedException ex) {
-                    System.err.println("ERROR: Sleep failed...");
-                }
-            }else{                    
-                repaint();
-                try {
-                    Thread.sleep(REFRESH_TIME);
-                } catch (InterruptedException ex) {
-                    System.err.println("ERROR: Sleep failed...");
-                }
-            }
-        }
     }
 }

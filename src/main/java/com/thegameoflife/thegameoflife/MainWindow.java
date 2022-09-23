@@ -8,8 +8,11 @@ package com.thegameoflife.thegameoflife;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -38,6 +41,9 @@ public class MainWindow extends JFrame {
     private static final int CELLS_X=250;
     private static final int CELLS_Y=250;
     private static final int CELLS_PIXELS = 10;
+    private static final int REFRESH_TIME = 200;
+    private static final int RIGHT_CLICK = MouseEvent.BUTTON1;
+    private static final int LEFT_CLICK = MouseEvent.BUTTON3;
     private static final String[] WORLD_TYPES={"Toroidal","Finite"};
     //Components
     private JScrollPane worldScroller;
@@ -51,38 +57,73 @@ public class MainWindow extends JFrame {
     private JComboBox zoomOptions, speedOptions;
     private JLabel zoomIcon,speedIcon,generationLabel,aliveLabel,deathLabel;
     //Others
-    private Lock runGOL;
+    private boolean runGOL, generateRandomFlag, eraseFlag, editFlag, cellEditedFlag;
     private double randomProbability;
+    private int nextStateTime;
+    private Point mousePosition;
+    private int mouseButton;
     
     
     public MainWindow(){
-        this.setSize(WINDOW_WORLD_LENGTH,WINDOW_WORLD_HEIGHT);
-        this.setLocationRelativeTo(null);
-        this.setDefaultCloseOperation(EXIT_ON_CLOSE);
-        this.setTitle("Conway's game of life");
-        this.setResizable(false);
-        this.setLayout(null);
-        this.setIconImage(new ImageIcon("resources/abstractLogo.png").getImage());
+        setSize(WINDOW_WORLD_LENGTH,WINDOW_WORLD_HEIGHT);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setTitle("Conway's game of life");
+        setResizable(false);
+        setLayout(null);
+        setIconImage(new ImageIcon("resources/abstractLogo.png").getImage());
         //Configure all components of the main window for the simulation
         initComponents();
         setActions();
-        this.setVisible(true);
+        setVisible(true);
         
-        randomProbability = 10; //10% of alive cells
-        //TESTING
-        //////////////////////////////
-        //Object used to pause/play GOL simulation
-        runGOL = new Lock();
-        runGOL.setValue(false);
+        randomProbability = 10; //10% of alive cells at the beginning
+        nextStateTime = 100;
+        mousePosition = new Point(0,0);
         //Create a random world at the beginning
-        worldPanel.setInfoLables(generationLabel, aliveLabel, deathLabel);
-        worldPanel.generateRandomWorldPanel(10);
-        worldPanel.setLockGOL(runGOL);    
-        new Thread(worldPanel).start();
-        /////////////////////////////
+        worldPanel.generateRandomWorldPanel(10);//10% of alive cells
+        setInfoInLabels();
+    }
+    public void startGOL(){
+        while(true){
+            if(runGOL){
+                worldPanel.nextWorldPanelState();
+                setInfoInLabels();
+                try {
+                    Thread.sleep(nextStateTime);
+                } catch (InterruptedException ex) {
+                    System.err.println("ERROR: Sleep failed...");
+                }
+            }else if(editFlag && cellEditedFlag){
+                if(mouseButton == RIGHT_CLICK) worldPanel.setWorldPanelCellAsAlive(mousePosition.x/CELLS_PIXELS,mousePosition.y/CELLS_PIXELS);
+                else worldPanel.setWorldPanelCellAsDeath(mousePosition.x/CELLS_PIXELS,mousePosition.y/CELLS_PIXELS);
+                setInfoInLabels();
+                cellEditedFlag = false;
+            }else if(generateRandomFlag){
+                worldPanel.generateRandomWorldPanel(randomProbability);
+                setInfoInLabels();
+                generateRandomFlag = false;
+            }else if(eraseFlag){
+                worldPanel.eraseWorldPanel();
+                setInfoInLabels();
+                eraseFlag = false;
+            }
+            else{
+                worldPanel.repaint();
+                try {
+                    Thread.sleep(REFRESH_TIME);
+                } catch (InterruptedException ex) {
+                    System.err.println("ERROR: Sleep failed...");
+                }
+            }
+        }
+    }
+    private void setInfoInLabels(){
+        generationLabel.setText("Gen: "+worldPanel.getWorldPanelGeneration());
+        aliveLabel.setText("Alive: "+worldPanel.getWorldPanelAliveCells());
+        deathLabel.setText("Death: "+worldPanel.getWorldPanelDeathCells());
     }
     private void initComponents(){
-        
         //Menu Bar
         openFile = new JMenuItem();
         saveFile = new JMenuItem();
@@ -106,6 +147,7 @@ public class MainWindow extends JFrame {
         this.setJMenuBar(menuBar);
         //Simulation
         worldPanel = new WorldPanel(CELLS_PIXELS, CELLS_X, CELLS_Y);
+        worldPanel.setCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));
         //Scrollbars
         worldScroller = new JScrollPane();
         worldScroller.setViewportView(worldPanel);
@@ -191,19 +233,19 @@ public class MainWindow extends JFrame {
         speedOptions.addItem("MAX");
         speedOptions.setSelectedIndex(2);
         //Generation label
-        generationLabel = new JLabel("Gen: 10");
+        generationLabel = new JLabel("Gen: 0");
         generationLabel.setBounds(WINDOW_WORLD_LENGTH-LABEL_LENGTH*3-15, 0, LABEL_LENGTH,TOOLBAR_SIZE );
         generationLabel.setIcon(new ImageIcon("resources/timePurplePink.png"));
         generationLabel.setToolTipText("Generation");
         generationLabel.setEnabled(true);
         //Alive cells label
-        aliveLabel = new JLabel("Alive: 500");
+        aliveLabel = new JLabel("Alive: ");
         aliveLabel.setBounds(WINDOW_WORLD_LENGTH-LABEL_LENGTH*2-15, 0, LABEL_LENGTH,TOOLBAR_SIZE );
         aliveLabel.setIcon(new ImageIcon("resources/aliveRed.png"));
         aliveLabel.setToolTipText("Alive cells");
         aliveLabel.setEnabled(true);
         //Death cells label
-        deathLabel = new JLabel("Death: 1000");
+        deathLabel = new JLabel("Death: ");
         deathLabel.setBounds(WINDOW_WORLD_LENGTH-LABEL_LENGTH-15, 0, LABEL_LENGTH,TOOLBAR_SIZE );
         deathLabel.setIcon(new ImageIcon("resources/deathGreen.png"));
         deathLabel.setToolTipText("Death cells");
@@ -227,83 +269,66 @@ public class MainWindow extends JFrame {
         toolbar.add(aliveLabel);
         toolbar.add(deathLabel);
         this.add(toolbar);
-        /*
-        JPanel jp = new JPanel();
-        jp.setPreferredSize(new Dimension(100,700));
-        jp.setBackground(Color.red);
-        jp.setBounds(700, 0, 100, 640);
-        jp.setVisible(true);
-        this.add(jp);
-        */
     }
     
     public void setActions(){
-        pauseAndPlay.addActionListener(new ActionListener(){
+        pauseAndPlay.addActionListener((ActionEvent e) -> {
+            runGOL = !runGOL;
+            pauseAndPlay.setIcon(runGOL ? new ImageIcon("resources/pauseRed.png") : new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setToolTipText(runGOL ? "Pause" : "Play");
+        });
+        edit.addActionListener((ActionEvent e) -> {
+            runGOL = false;
+            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setToolTipText("Play");
+            if(pauseAndPlay.isEnabled()){
+                pauseAndPlay.setEnabled(false);
+                random.setEnabled(false);
+                erase.setEnabled(false);
+                edit.setIcon(new ImageIcon("resources/uneditYellow.png"));
+                edit.setToolTipText("Stop edition");
+            }else{
+                pauseAndPlay.setEnabled(true);
+                random.setEnabled(true);
+                erase.setEnabled(true);
+                edit.setIcon(new ImageIcon("resources/editYellow.png"));
+                edit.setToolTipText("Edit");
+            }
+            editFlag = true;
+        });
+        random.addActionListener((ActionEvent e) -> {
+            runGOL = false;
+            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setToolTipText("Play");
+            //worldPanel.generateRandomWorldPanel(randomProbability);
+            generateRandomFlag = true;
+        });
+        erase.addActionListener((ActionEvent e) -> {
+            runGOL = false;
+            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setToolTipText("Play");
+            //worldPanel.eraseWorldPanel();
+            eraseFlag = true;
+        });
+        worldPanel.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                runGOL.switchValue();
-                pauseAndPlay.setIcon(runGOL.getValue() ? new ImageIcon("resources/pauseRed.png") : new ImageIcon("resources/playGreen.png"));
-                pauseAndPlay.setToolTipText(runGOL.getValue() ? "Pause" : "Play");
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException ex) {
-                    System.err.println("ERROR: Sleep failed...");
+            public void mouseDragged(MouseEvent e){
+                if(editFlag && !cellEditedFlag){
+                    mouseButton = e.getButton();
+                    mousePosition = e.getPoint();
+                    cellEditedFlag = true;
+                    System.out.println(mousePosition);
                 }
             }
         });
-        edit.addActionListener(new ActionListener(){
+        worldPanel.addMouseListener(new MouseAdapter() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                runGOL.setValue(false);
-                pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
-                pauseAndPlay.setToolTipText("Play");
-                if(pauseAndPlay.isEnabled()){
-                    pauseAndPlay.setEnabled(false);
-                    random.setEnabled(false);
-                    erase.setEnabled(false);
-                    edit.setIcon(new ImageIcon("resources/uneditYellow.png"));
-                    edit.setToolTipText("Stop edition");
-                }else{
-                    pauseAndPlay.setEnabled(true);
-                    random.setEnabled(true);
-                    erase.setEnabled(true);
-                    edit.setIcon(new ImageIcon("resources/editYellow.png"));
-                    edit.setToolTipText("Edit");
+            public void mouseClicked(MouseEvent e){
+                if(editFlag && !cellEditedFlag){
+                    mouseButton = e.getButton();
+                    mousePosition = e.getPoint();
+                    cellEditedFlag = true;
                 }
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException ex) {
-                    System.err.println("ERROR: Sleep failed...");
-                }
-                
-            }
-        });
-        random.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                runGOL.setValue(false);
-                pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
-                pauseAndPlay.setToolTipText("Play");
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException ex) {
-                    System.err.println("ERROR: Sleep failed...");
-                }
-                worldPanel.generateRandomWorldPanel(randomProbability);
-            }
-        });
-        erase.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                runGOL.setValue(false);
-                pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
-                pauseAndPlay.setToolTipText("Play");
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException ex) {
-                    System.err.println("ERROR: Sleep failed...");
-                }
-                worldPanel.eraseWorldPanel();
             }
         });
     }
