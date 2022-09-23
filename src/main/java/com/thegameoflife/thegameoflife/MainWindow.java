@@ -8,7 +8,6 @@ package com.thegameoflife.thegameoflife;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -44,6 +43,9 @@ public class MainWindow extends JFrame {
     private static final int REFRESH_TIME = 200;
     private static final int RIGHT_CLICK = MouseEvent.BUTTON1;
     private static final int LEFT_CLICK = MouseEvent.BUTTON3;
+    private static final int RIGHT_BUTTON_DOWN = MouseEvent.BUTTON1_DOWN_MASK;
+    private static final int LEFT_BUTTON_DOWN = MouseEvent.BUTTON3_DOWN_MASK;
+    private static final int MOUSE_BUTTON_DOWN = RIGHT_BUTTON_DOWN | LEFT_BUTTON_DOWN;
     private static final String[] WORLD_TYPES={"Toroidal","Finite"};
     //Components
     private JScrollPane worldScroller;
@@ -60,8 +62,6 @@ public class MainWindow extends JFrame {
     private boolean runGOL, generateRandomFlag, eraseFlag, editFlag, cellEditedFlag;
     private double randomProbability;
     private int nextStateTime;
-    private Point mousePosition;
-    private int mouseButton;
     
     
     public MainWindow(){
@@ -79,7 +79,6 @@ public class MainWindow extends JFrame {
         
         randomProbability = 10; //10% of alive cells at the beginning
         nextStateTime = 100;
-        mousePosition = new Point(0,0);
         //Create a random world at the beginning
         worldPanel.generateRandomWorldPanel(10);//10% of alive cells
         setInfoInLabels();
@@ -94,11 +93,14 @@ public class MainWindow extends JFrame {
                 } catch (InterruptedException ex) {
                     System.err.println("ERROR: Sleep failed...");
                 }
-            }else if(editFlag && cellEditedFlag){
-                if(mouseButton == RIGHT_CLICK) worldPanel.setWorldPanelCellAsAlive(mousePosition.x/CELLS_PIXELS,mousePosition.y/CELLS_PIXELS);
-                else worldPanel.setWorldPanelCellAsDeath(mousePosition.x/CELLS_PIXELS,mousePosition.y/CELLS_PIXELS);
-                setInfoInLabels();
-                cellEditedFlag = false;
+            }else if(editFlag){
+                //Just repaint the world and delegate changes to mouse listeners
+                worldPanel.repaint();
+                try {
+                    Thread.sleep(REFRESH_TIME);
+                } catch (InterruptedException ex) {
+                    System.err.println("ERROR: Sleep failed...");
+                }
             }else if(generateRandomFlag){
                 worldPanel.generateRandomWorldPanel(randomProbability);
                 setInfoInLabels();
@@ -294,40 +296,37 @@ public class MainWindow extends JFrame {
                 edit.setIcon(new ImageIcon("resources/editYellow.png"));
                 edit.setToolTipText("Edit");
             }
-            editFlag = true;
+            editFlag = !editFlag;
         });
         random.addActionListener((ActionEvent e) -> {
             runGOL = false;
             pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
             pauseAndPlay.setToolTipText("Play");
-            //worldPanel.generateRandomWorldPanel(randomProbability);
             generateRandomFlag = true;
         });
         erase.addActionListener((ActionEvent e) -> {
             runGOL = false;
             pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
             pauseAndPlay.setToolTipText("Play");
-            //worldPanel.eraseWorldPanel();
             eraseFlag = true;
         });
         worldPanel.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent e){
-                if(editFlag && !cellEditedFlag){
-                    mouseButton = e.getButton();
-                    mousePosition = e.getPoint();
-                    cellEditedFlag = true;
-                    System.out.println(mousePosition);
+                if(editFlag){
+                    if((e.getModifiersEx()&MOUSE_BUTTON_DOWN)==RIGHT_BUTTON_DOWN) worldPanel.setWorldPanelCellAsAlive(e.getX()/CELLS_PIXELS,e.getY()/CELLS_PIXELS);
+                    else if((e.getModifiersEx()&MOUSE_BUTTON_DOWN)==LEFT_BUTTON_DOWN) worldPanel.setWorldPanelCellAsDeath(e.getX()/CELLS_PIXELS,e.getY()/CELLS_PIXELS);
+                    setInfoInLabels();
                 }
             }
         });
         worldPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e){
-                if(editFlag && !cellEditedFlag){
-                    mouseButton = e.getButton();
-                    mousePosition = e.getPoint();
-                    cellEditedFlag = true;
+                if(editFlag){
+                    if(e.getButton() == RIGHT_CLICK) worldPanel.setWorldPanelCellAsAlive(e.getX()/CELLS_PIXELS,e.getY()/CELLS_PIXELS);
+                    else if(e.getButton() == LEFT_CLICK)  worldPanel.setWorldPanelCellAsDeath(e.getX()/CELLS_PIXELS,e.getY()/CELLS_PIXELS);
+                    setInfoInLabels();
                 }
             }
         });
