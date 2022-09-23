@@ -17,3 +17,5 @@
 <a href="https://www.flaticon.es/iconos-gratis/documento" title="documento iconos">Documento iconos creados por wanicon - Flaticon</a>
 <a href="https://www.flaticon.es/iconos-gratis/reglas" title="reglas iconos">Reglas iconos creados por surang - Flaticon</a>
 <a href="https://www.flaticon.es/iconos-gratis/cuadrado" title="cuadrado iconos">Cuadrado iconos creados por Freepik - Flaticon</a>
+<a href="https://www.flaticon.es/iconos-gratis/roto" title="roto iconos">Roto iconos creados por Freepik - Flaticon</a>
+<a href="https://www.flaticon.es/iconos-gratis/lapiz" title="lápiz iconos">Lápiz iconos creados por bukeicon - Flaticon</a>

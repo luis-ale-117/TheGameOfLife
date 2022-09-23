@@ -129,7 +129,7 @@ public class MainWindow extends JFrame {
         edit.setBorderPainted(false);
         edit.setFocusPainted(false);
         edit.setBackground(Color.white);
-        edit.setIcon(new ImageIcon("resources/editPurple.png"));
+        edit.setIcon(new ImageIcon("resources/editYellow.png"));
         edit.setCursor(new Cursor(Cursor.HAND_CURSOR));
         edit.setToolTipText("Edit");
         edit.setEnabled(true);
@@ -249,6 +249,33 @@ public class MainWindow extends JFrame {
                 } catch (InterruptedException ex) {
                     System.err.println("ERROR: Sleep failed...");
                 }
+            }
+        });
+        edit.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                runGOL.setValue(false);
+                pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+                pauseAndPlay.setToolTipText("Play");
+                if(pauseAndPlay.isEnabled()){
+                    pauseAndPlay.setEnabled(false);
+                    random.setEnabled(false);
+                    erase.setEnabled(false);
+                    edit.setIcon(new ImageIcon("resources/uneditYellow.png"));
+                    edit.setToolTipText("Stop edition");
+                }else{
+                    pauseAndPlay.setEnabled(true);
+                    random.setEnabled(true);
+                    erase.setEnabled(true);
+                    edit.setIcon(new ImageIcon("resources/editYellow.png"));
+                    edit.setToolTipText("Edit");
+                }
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException ex) {
+                    System.err.println("ERROR: Sleep failed...");
+                }
+                
             }
         });
         random.addActionListener(new ActionListener(){
