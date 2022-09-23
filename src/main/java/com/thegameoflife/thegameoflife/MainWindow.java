@@ -61,9 +61,9 @@ public class MainWindow extends JFrame {
     //Others
     private boolean runGOL, generateRandomFlag, eraseFlag, editFlag, cellEditedFlag;
     private double randomProbability;
-    private int nextStateTime;
+    private int nextStateSpeed;
     private double[] zoomValues = {0.25,0.5,1,1.5,2};
-    private int[] speedValues = {2000,1000,500,100,50};//Miliseconds
+    private int[] speedValues = {2000,1000,500,100,50,10,0};//Miliseconds
     
     
     public MainWindow(){
@@ -80,7 +80,7 @@ public class MainWindow extends JFrame {
         setVisible(true);
         
         randomProbability = 10; //10% of alive cells at the beginning
-        nextStateTime = 100;
+        nextStateSpeed = 100;
         //Create a random world at the beginning
         worldPanel.generateRandomWorldPanel(10);//10% of alive cells
         setInfoInLabels();
@@ -91,7 +91,7 @@ public class MainWindow extends JFrame {
                 worldPanel.nextWorldPanelState();
                 setInfoInLabels();
                 try {
-                    Thread.sleep(nextStateTime);
+                    Thread.sleep(nextStateSpeed);
                 } catch (InterruptedException ex) {
                     System.err.println("ERROR: Sleep failed...");
                 }
@@ -228,13 +228,8 @@ public class MainWindow extends JFrame {
         speedOptions.setCursor(new Cursor(Cursor.HAND_CURSOR));
         speedOptions.setToolTipText("Speed");
         speedOptions.setEnabled(true);
-        speedOptions.addItem("2s");
-        speedOptions.addItem("1s");
-        speedOptions.addItem("0.5s");
-        speedOptions.addItem("0.1s");
-        speedOptions.addItem("0.05s");
-        speedOptions.addItem("MAX");
-        speedOptions.setSelectedIndex(2);
+        for(double speed: speedValues) if(speed!=0) speedOptions.addItem((double)speed/1000+"s"); else speedOptions.addItem("MAX");
+        speedOptions.setSelectedItem("0.1s");
         //Generation label
         generationLabel = new JLabel("Gen: 0");
         generationLabel.setBounds(WINDOW_WORLD_LENGTH-LABEL_LENGTH*3-15, 0, LABEL_LENGTH,TOOLBAR_SIZE );
@@ -338,6 +333,9 @@ public class MainWindow extends JFrame {
         zoomOptions.addActionListener((ActionEvent e) -> {
             worldPanel.setWorldPanelSize((int)(CELLS_PIXELS*CELLS_X*zoomValues[zoomOptions.getSelectedIndex()]),(int)(CELLS_PIXELS*CELLS_Y*zoomValues[zoomOptions.getSelectedIndex()]));
             worldScroller.setViewportView(worldPanel);
+        });
+        speedOptions.addActionListener((ActionEvent e) -> {
+            nextStateSpeed = speedValues[speedOptions.getSelectedIndex()];
         });
     }
 }
