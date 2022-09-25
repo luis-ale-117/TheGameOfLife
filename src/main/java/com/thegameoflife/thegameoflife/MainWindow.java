@@ -12,10 +12,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -29,6 +34,7 @@ import javax.swing.JToolBar;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  *
@@ -400,6 +406,33 @@ public class MainWindow extends JFrame {
             int randomnessOption = JOptionPane.showOptionDialog(null, ob, "Randomness in world", JOptionPane.OK_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
             if (randomnessOption == JOptionPane.OK_OPTION){
                 this.randomAliveCellProbability = (int)randomSpinner.getValue();
+            }
+        });
+        saveImg.addActionListener((ActionEvent e) -> {
+            runGOL = false;
+            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setToolTipText("Play");
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setMultiSelectionEnabled(false);
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("PNG image","png");
+            fileChooser.setFileFilter(filter);
+            int aproveOption = fileChooser.showSaveDialog(this);
+            if(aproveOption == JFileChooser.APPROVE_OPTION){
+                try {
+                    File fileImage = fileChooser.getSelectedFile();
+                    if(!fileImage.getCanonicalPath().endsWith(".png"))
+                        fileImage = new File(fileChooser.getSelectedFile().getCanonicalPath()+".png");
+                    ImageIO.write(worldPanel.getWorldImage(), "png", fileImage);
+                    JOptionPane.showMessageDialog(this,
+                        "Image saved succesfully as\n"+fileImage.getCanonicalPath(),
+                        "Image saved",
+                        JOptionPane.INFORMATION_MESSAGE);
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(this,
+                    "Error when creating image\nError: "+ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
     }

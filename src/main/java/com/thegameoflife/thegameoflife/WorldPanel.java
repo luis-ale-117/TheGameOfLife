@@ -133,6 +133,9 @@ public class WorldPanel extends JLabel{
     public void setDeathColor(Color deathColor) {
         this.deathColor = deathColor;
     }
+    public BufferedImage getWorldImage() {
+        return worldImage;
+    }
     @Override
     public void paintComponent(Graphics g){
         g.drawImage(worldImage, 0, 0,zoomPixelsX,zoomPixelsY,this);
