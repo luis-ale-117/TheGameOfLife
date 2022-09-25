@@ -40,11 +40,34 @@ public class WorldPanel extends JLabel{
         aliveColor = Color.WHITE;
         deathColor = Color.BLACK;
     }
+    public void setWorldPanelSettings(int pixels, int cellsInX, int cellsInY){
+        cellPixels = pixels;
+        cellsX = cellsInX;
+        cellsY = cellsInY;
+        pixelsX = cellPixels * cellsX;
+        pixelsY = cellPixels * cellsY;
+        zoomPixelsX = pixelsX;
+        zoomPixelsY = pixelsY;
+        this.setPreferredSize(new Dimension(pixelsX,pixelsY));
+        world = new GOLWorld(cellsX,cellsY);
+        worldImage = new BufferedImage(pixelsX,pixelsY,BufferedImage.TYPE_INT_RGB);
+        worldDraw = worldImage.createGraphics();
+    }
+    public void setWorldPanelCellPixels(int pixels){
+        cellPixels = pixels;
+        pixelsX = cellPixels * cellsX;
+        pixelsY = cellPixels * cellsY;
+        zoomPixelsX = pixelsX;
+        zoomPixelsY = pixelsY;
+        this.setPreferredSize(new Dimension(pixelsX,pixelsY));
+        worldImage = new BufferedImage(pixelsX,pixelsY,BufferedImage.TYPE_INT_RGB);
+        worldDraw = worldImage.createGraphics();
+    }
     public void initBlankWorld(){
         worldDraw.setColor(deathColor);
         worldDraw.fillRect(0, 0, pixelsX-1, pixelsY-1);
     }
-    public void setWorldPanelSize(int x, int y){
+    public void setWorldPanelZoomPixels(int x, int y){
         zoomPixelsX = x;
         zoomPixelsY = y;
         this.setPreferredSize(new Dimension(zoomPixelsX,zoomPixelsY));
@@ -65,6 +88,19 @@ public class WorldPanel extends JLabel{
                     }
                     worldDraw.fillRect(x*cellPixels,y*cellPixels, cellPixels,cellPixels);
                 }
+            }
+        }
+        repaint();
+    }
+    public void paintAllWorldPanel(){
+        for(int y=0;y<cellsY;y++){
+            for(int x=0;x<cellsX;x++){
+                if(world.isCellAlive(x, y)){
+                    worldDraw.setColor(aliveColor);
+                }else{
+                    worldDraw.setColor(deathColor);
+                }
+                worldDraw.fillRect(x*cellPixels,y*cellPixels, cellPixels,cellPixels);
             }
         }
         repaint();

@@ -12,7 +12,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
-import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -67,15 +66,15 @@ public class MainWindow extends JFrame {
     private JMenuBar menuBar;
     private JMenu file,editMenu;
     private JMenuItem loadTxt,saveAsTxt,saveImg;
-    private JMenuItem editWolrdColors,editWroldType,randomness;
+    private JMenuItem editWorldColors,editWroldType,editWorldDimensions,randomness;
     private JToolBar toolbar;
     private JButton pauseAndPlay,edit,random,erase,ruleButton;
     private JComboBox zoomOptions, speedOptions;
     private JLabel zoomIcon,speedIcon,generationLabel,aliveLabel,deathLabel;
     //Others
-    private boolean runGOL, generateRandomFlag, eraseFlag, editFlag, cellEditedFlag;
+    private boolean runGOL, generateRandomFlag, eraseFlag, editFlag, cellEditedFlag, stopRefreshFlag;
     private double randomAliveCellProbability;
-    private int nextStateSpeed;
+    private int nextStateSpeed, cellsPixels, cellsX,cellsY;
     private double[] zoomValues = {0.25,0.5,1,1.5,2};
     private int[] speedValues = {2000,1000,500,100,50,10,0};//Miliseconds
     
@@ -95,6 +94,9 @@ public class MainWindow extends JFrame {
         
         randomAliveCellProbability = 10; //10% of alive cells at the beginning
         nextStateSpeed = 100;
+        cellsPixels = CELLS_PIXELS;//Default values of the world
+        cellsX = CELLS_X;
+        cellsY = CELLS_Y;
         //Create a random world at the beginning
         worldPanel.generateRandomWorldPanel(10);//10% of alive cells
         setInfoInLabels();
@@ -131,6 +133,15 @@ public class MainWindow extends JFrame {
                 worldPanel.eraseWorldPanel();
                 setInfoInLabels();
                 eraseFlag = false;
+            }else if(stopRefreshFlag){
+                try {
+                    Thread.sleep(REFRESH_TIME);
+                } catch (InterruptedException ex) {
+                    JOptionPane.showMessageDialog(this,
+                    "Error when sleeping after refreshing world\nError: "+ex.getMessage(),
+                    "Refresh error",
+                    JOptionPane.ERROR_MESSAGE);
+                }
             }
             else{
                 worldPanel.repaint();
@@ -156,9 +167,10 @@ public class MainWindow extends JFrame {
         saveAsTxt = new JMenuItem();
         saveImg = new JMenuItem();
         file =  new JMenu();
-        editWolrdColors = new JMenuItem();
+        editWorldColors = new JMenuItem();
         editWroldType = new JMenuItem();
         randomness = new JMenuItem();
+        editWorldDimensions = new JMenuItem();
         editMenu =  new JMenu();
         menuBar = new JMenuBar();
         file.setText("File");
@@ -169,11 +181,13 @@ public class MainWindow extends JFrame {
         file.add(saveAsTxt);
         file.add(saveImg);
         editMenu.setText("Edit");
-        editWolrdColors.setText("World color");
+        editWorldColors.setText("World color");
         editWroldType.setText("World type");
+        editWorldDimensions.setText("World dimensions");
         randomness.setText("Randomness");
-        editMenu.add(editWolrdColors);
+        editMenu.add(editWorldColors);
         editMenu.add(editWroldType);
+        editMenu.add(editWorldDimensions);
         editMenu.add(randomness);
         menuBar.add(file);
         menuBar.add(editMenu);
@@ -336,8 +350,8 @@ public class MainWindow extends JFrame {
             @Override
             public void mouseDragged(MouseEvent e){
                 if(editFlag){
-                    int cellPosX = (int)(e.getX()/(CELLS_PIXELS*zoomValues[zoomOptions.getSelectedIndex()]));
-                    int cellPosY = (int)(e.getY()/(CELLS_PIXELS*zoomValues[zoomOptions.getSelectedIndex()]));
+                    int cellPosX = (int)(e.getX()/(cellsPixels*zoomValues[zoomOptions.getSelectedIndex()]));
+                    int cellPosY = (int)(e.getY()/(cellsPixels*zoomValues[zoomOptions.getSelectedIndex()]));
                     if((e.getModifiersEx()&MOUSE_BUTTON_DOWN)==RIGHT_BUTTON_DOWN) worldPanel.setWorldPanelCellAsAlive(cellPosX,cellPosY);
                     else if((e.getModifiersEx()&MOUSE_BUTTON_DOWN)==LEFT_BUTTON_DOWN) worldPanel.setWorldPanelCellAsDeath(cellPosX,cellPosY);
                     setInfoInLabels();
@@ -348,8 +362,8 @@ public class MainWindow extends JFrame {
             @Override
             public void mouseClicked(MouseEvent e){
                 if(editFlag){
-                    int cellPosX = (int)(e.getX()/(CELLS_PIXELS*zoomValues[zoomOptions.getSelectedIndex()]));
-                    int cellPosY = (int)(e.getY()/(CELLS_PIXELS*zoomValues[zoomOptions.getSelectedIndex()]));
+                    int cellPosX = (int)(e.getX()/(cellsPixels*zoomValues[zoomOptions.getSelectedIndex()]));
+                    int cellPosY = (int)(e.getY()/(cellsPixels*zoomValues[zoomOptions.getSelectedIndex()]));
                     if(e.getButton() == RIGHT_CLICK) worldPanel.setWorldPanelCellAsAlive(cellPosX,cellPosY);
                     else if(e.getButton() == LEFT_CLICK)  worldPanel.setWorldPanelCellAsDeath(cellPosX,cellPosY);
                     setInfoInLabels();
@@ -369,7 +383,7 @@ public class MainWindow extends JFrame {
             eraseFlag = true;
         });
         zoomOptions.addActionListener((ActionEvent e) -> {
-            worldPanel.setWorldPanelSize((int)(CELLS_PIXELS*CELLS_X*zoomValues[zoomOptions.getSelectedIndex()]),(int)(CELLS_PIXELS*CELLS_Y*zoomValues[zoomOptions.getSelectedIndex()]));
+            worldPanel.setWorldPanelZoomPixels((int)(cellsPixels*cellsX*zoomValues[zoomOptions.getSelectedIndex()]),(int)(cellsPixels*cellsY*zoomValues[zoomOptions.getSelectedIndex()]));
             worldScroller.setViewportView(worldPanel);
         });
         speedOptions.addActionListener((ActionEvent e) -> {
@@ -394,7 +408,11 @@ public class MainWindow extends JFrame {
                 ruleButton.setText(worldPanel.getWorldPanelRule());
             }
         });
-        editWolrdColors.addActionListener((ActionEvent e) -> {
+        editWorldColors.addActionListener((ActionEvent e) -> {
+            runGOL = false;
+            stopRefreshFlag = true;
+            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setToolTipText("Play");
             JColorChooser aliveColorChooser = new JColorChooser(Color.WHITE);//Black by default
             int aliveColorOption = JOptionPane.showOptionDialog(this, aliveColorChooser, "Choose alive cell color", JOptionPane.CLOSED_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
             if (aliveColorOption == JOptionPane.CLOSED_OPTION){
@@ -407,11 +425,56 @@ public class MainWindow extends JFrame {
                 return;
             }
             worldPanel.setDeathColor(deathColorChooser.getColor());
+            worldPanel.paintAllWorldPanel();
+            stopRefreshFlag = false;
+        });
+        editWorldDimensions.addActionListener((ActionEvent e) -> {
+            runGOL = false;
+            stopRefreshFlag = true;
+            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setToolTipText("Play");
+            SpinnerNumberModel spModelX = new SpinnerNumberModel(cellsX, 3, 10000, 1);
+            SpinnerNumberModel spModelY = new SpinnerNumberModel(cellsY, 3, 10000, 1);
+            SpinnerNumberModel spModelPixels = new SpinnerNumberModel(cellsPixels, 1, 50, 1);
+            JSpinner cellsXSpinner = new JSpinner(spModelX);
+            JSpinner cellsYSpinner = new JSpinner(spModelY);
+            JSpinner cellPixelsSpinner = new JSpinner(spModelPixels);
+            
+            Object[] dimensionItems= new Object[8];
+            dimensionItems[0] = "Set world dimensions";
+            dimensionItems[1] = "World length (cells)";
+            dimensionItems[2] = cellsXSpinner;
+            dimensionItems[3] = "World height (cells)";
+            dimensionItems[4] = cellsYSpinner;
+            dimensionItems[5] = "Pixels per cell";
+            dimensionItems[6] = cellPixelsSpinner;
+            dimensionItems[7] = "WARNING: Changing length or height\nwill create a new blank world with\nthe specified dimensions";
+            int okOption = JOptionPane.showOptionDialog(this, dimensionItems, "World dimensions", JOptionPane.OK_OPTION, JOptionPane.QUESTION_MESSAGE, new ImageIcon("resources/settings.png"), null, null);
+            if(okOption == JOptionPane.OK_OPTION){
+                //If user changed any dimension value
+                if(cellsPixels!=(int)cellPixelsSpinner.getValue() || cellsX!=(int)cellsXSpinner.getValue() || cellsY!=(int)cellsYSpinner.getValue()){
+                    //Just update pixels size
+                    if(cellsX==(int)cellsXSpinner.getValue() && cellsY==(int)cellsYSpinner.getValue()){
+                        cellsPixels = (int)cellPixelsSpinner.getValue();
+                        worldPanel.setWorldPanelCellPixels(cellsPixels);
+                    }else{
+                        cellsPixels = (int)cellPixelsSpinner.getValue();
+                        cellsX = (int)cellsXSpinner.getValue();
+                        cellsY = (int)cellsYSpinner.getValue();
+                        worldPanel.setWorldPanelSettings(cellsPixels, cellsX, cellsY);
+                        setInfoInLabels();
+                    }
+                    zoomOptions.setSelectedItem("100%");
+                    worldScroller.setViewportView(worldPanel);
+                    worldPanel.paintAllWorldPanel();
+                }
+            }
+            stopRefreshFlag = false;
         });
         randomness.addActionListener((ActionEvent e) -> {
             SpinnerNumberModel spModel = new SpinnerNumberModel(10, 0, 100, 1);
             JSpinner randomSpinner = new JSpinner(spModel);
-            Object[] ob= new Object[5];
+            Object[] ob= new Object[2];
             ob[0] = "Alive cells probability (%)";
             ob[1] = randomSpinner;
             int randomnessOption = JOptionPane.showOptionDialog(null, ob, "Randomness in world", JOptionPane.OK_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
@@ -494,10 +557,11 @@ public class MainWindow extends JFrame {
     }
 }
 /**
- * TODO: Change cell pixels
- * TODO: Change cells number
+ * TODO: Change cell pixels - OK
+ * TODO: Change cells number - OK
  * TODO: Change world type
- * TODO: Save as txt file
+ * TODO: Save as txt file - OK
+ * TODO: Save as PNG image - OK
  * TODO: Load from txt file
  * TODO: Graphics (Save as CSV files)
  */

@@ -20,3 +20,4 @@
 <a href="https://www.flaticon.es/iconos-gratis/roto" title="roto iconos">Roto iconos creados por Freepik - Flaticon</a>
 <a href="https://www.flaticon.es/iconos-gratis/lapiz" title="lápiz iconos">Lápiz iconos creados por bukeicon - Flaticon</a>
 <a href="https://www.flaticon.es/iconos-gratis/reglas" title="reglas iconos">Reglas iconos creados por Flat Icons - Flaticon</a>
+<a href="https://www.flaticon.es/iconos-gratis/configuracion" title="configuración iconos">Configuración iconos creados por vectorsmarket15 - Flaticon</a>
