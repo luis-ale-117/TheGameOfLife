@@ -22,6 +22,7 @@ public class WorldPanel extends JLabel{
     private BufferedImage worldImage;
     private Graphics worldDraw;
     private GOLWorld world;
+    private Color aliveColor,deathColor;
     
     WorldPanel(int pixels, int cellsInX, int cellsInY){//Puede ser rectangular
         super();
@@ -36,9 +37,11 @@ public class WorldPanel extends JLabel{
         world = new GOLWorld(cellsX,cellsY);
         worldImage = new BufferedImage(pixelsX,pixelsY,BufferedImage.TYPE_INT_RGB);
         worldDraw = worldImage.createGraphics();
+        aliveColor = Color.WHITE;
+        deathColor = Color.BLACK;
     }
     public void initBlankWorld(){
-        worldDraw.setColor(Color.BLACK);
+        worldDraw.setColor(deathColor);
         worldDraw.fillRect(0, 0, pixelsX-1, pixelsY-1);
     }
     public void setWorldPanelSize(int x, int y){
@@ -47,7 +50,7 @@ public class WorldPanel extends JLabel{
         this.setPreferredSize(new Dimension(zoomPixelsX,zoomPixelsY));
     }
     public void eraseWorldPanel(){
-        worldDraw.setColor(Color.BLACK);
+        worldDraw.setColor(deathColor);
         worldDraw.fillRect(0, 0, pixelsX-1, pixelsY-1);
         world.eraseWorld();
     }
@@ -56,9 +59,9 @@ public class WorldPanel extends JLabel{
             for(int x=0;x<cellsX;x++){
                 if(world.cellChangedState(x, y)){
                     if(world.isCellAlive(x, y)){
-                        worldDraw.setColor(Color.WHITE);
+                        worldDraw.setColor(aliveColor);
                     }else{
-                        worldDraw.setColor(Color.BLACK);
+                        worldDraw.setColor(deathColor);
                     }
                     worldDraw.fillRect(x*cellPixels,y*cellPixels, cellPixels,cellPixels);
                 }
@@ -78,7 +81,7 @@ public class WorldPanel extends JLabel{
     public void setWorldPanelCellAsAlive(int x, int y){
         if(world.isCellDeath(x, y)){
             world.setCellAsAlive(x, y);
-            worldDraw.setColor(Color.WHITE);
+            worldDraw.setColor(aliveColor);
             worldDraw.fillRect(x*cellPixels,y*cellPixels, cellPixels,cellPixels);
         }
         repaint();
@@ -86,7 +89,7 @@ public class WorldPanel extends JLabel{
     public void setWorldPanelCellAsDeath(int x, int y){
         if(world.isCellAlive(x, y)){
             world.setCellAsDeath(x, y);
-            worldDraw.setColor(Color.BLACK);
+            worldDraw.setColor(deathColor);
             worldDraw.fillRect(x*cellPixels,y*cellPixels, cellPixels,cellPixels);
         }
         repaint();
@@ -117,6 +120,18 @@ public class WorldPanel extends JLabel{
     }
     public int getPixelsY() {
         return pixelsY;
+    }
+    public String getWorldPanelBornRule(){
+        return world.getBornRule();
+    }
+    public String getWorldPanelSurviveRule(){
+        return world.getSurviveRule();
+    }
+    public void setAliveColor(Color aliveColor) {
+        this.aliveColor = aliveColor;
+    }
+    public void setDeathColor(Color deathColor) {
+        this.deathColor = deathColor;
     }
     @Override
     public void paintComponent(Graphics g){

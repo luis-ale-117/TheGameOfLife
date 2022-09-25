@@ -57,7 +57,13 @@ public class GOLWorld {
         }
     }
     public String getRuleAsString(){
-        return "B:"+bornRule +" / S:"+ surviveRule;
+        return "B"+bornRule +" / S"+ surviveRule;
+    }
+    public String getBornRule() {
+        return bornRule;
+    }
+    public String getSurviveRule() {
+        return surviveRule;
     }
     public void setNonToroidalBorderStateAsAlive(){
         nonToroidalBorderState = ALIVE;
