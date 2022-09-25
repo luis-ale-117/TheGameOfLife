@@ -94,6 +94,9 @@ public class WorldPanel extends JLabel{
         }
         repaint();
     }
+    public byte getWorldPanelCellState(int x, int y){
+        return world.getCellState(x, y);
+    }
     public void setWorldPanelAsToroidal(){
         world.setToroidal();
     }
@@ -135,6 +138,21 @@ public class WorldPanel extends JLabel{
     }
     public BufferedImage getWorldImage() {
         return worldImage;
+    }
+    public int getCellPixels() {
+        return cellPixels;
+    }
+    public int getCellsX() {
+        return cellsX;
+    }
+    public int getCellsY() {
+        return cellsY;
+    }
+    public Color getAliveCellsColor() {
+        return aliveColor;
+    }
+    public Color getDeathCellsColor() {
+        return deathColor;
     }
     @Override
     public void paintComponent(Graphics g){

@@ -148,6 +148,9 @@ public class GOLWorld {
         }
         currentWorld[y][x] = DEATH;
     }
+    public byte getCellState(int x, int y){
+        return currentWorld[y][x];
+    }
     public int getAliveCells(){
         return aliveCells;
     }

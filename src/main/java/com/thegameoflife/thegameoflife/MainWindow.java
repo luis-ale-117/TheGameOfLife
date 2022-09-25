@@ -13,7 +13,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -64,7 +66,7 @@ public class MainWindow extends JFrame {
     private WorldPanel worldPanel;
     private JMenuBar menuBar;
     private JMenu file,editMenu;
-    private JMenuItem loadFile,saveFile,saveImg;
+    private JMenuItem loadTxt,saveAsTxt,saveImg;
     private JMenuItem editWolrdColors,editWroldType,randomness;
     private JToolBar toolbar;
     private JButton pauseAndPlay,edit,random,erase,ruleButton;
@@ -105,7 +107,10 @@ public class MainWindow extends JFrame {
                 try {
                     Thread.sleep(nextStateSpeed);
                 } catch (InterruptedException ex) {
-                    System.err.println("ERROR: Sleep failed...");
+                    JOptionPane.showMessageDialog(this,
+                    "Error when sleeping after refreshing world\nError: "+ex.getMessage(),
+                    "Refresh error",
+                    JOptionPane.ERROR_MESSAGE);
                 }
             }else if(editFlag){
                 //Just repaint the world and delegate changes to mouse listeners
@@ -113,7 +118,10 @@ public class MainWindow extends JFrame {
                 try {
                     Thread.sleep(REFRESH_TIME);
                 } catch (InterruptedException ex) {
-                    System.err.println("ERROR: Sleep failed...");
+                    JOptionPane.showMessageDialog(this,
+                    "Error when sleeping after refreshing world\nError: "+ex.getMessage(),
+                    "Refresh error",
+                    JOptionPane.ERROR_MESSAGE);
                 }
             }else if(generateRandomFlag){
                 worldPanel.generateRandomWorldPanel(randomAliveCellProbability);
@@ -129,7 +137,10 @@ public class MainWindow extends JFrame {
                 try {
                     Thread.sleep(REFRESH_TIME);
                 } catch (InterruptedException ex) {
-                    System.err.println("ERROR: Sleep failed...");
+                    JOptionPane.showMessageDialog(this,
+                    "Error when sleeping after refreshing world\nError: "+ex.getMessage(),
+                    "Refresh error",
+                    JOptionPane.ERROR_MESSAGE);
                 }
             }
         }
@@ -141,8 +152,8 @@ public class MainWindow extends JFrame {
     }
     private void initComponents(){
         //Menu Bar
-        loadFile = new JMenuItem();
-        saveFile = new JMenuItem();
+        loadTxt = new JMenuItem();
+        saveAsTxt = new JMenuItem();
         saveImg = new JMenuItem();
         file =  new JMenu();
         editWolrdColors = new JMenuItem();
@@ -151,11 +162,11 @@ public class MainWindow extends JFrame {
         editMenu =  new JMenu();
         menuBar = new JMenuBar();
         file.setText("File");
-        loadFile.setText("Load from .txt");
-        saveFile.setText("Save as .txt");
-        saveImg.setText("Save as image");
-        file.add(loadFile);
-        file.add(saveFile);
+        loadTxt.setText("Load from .txt");
+        saveAsTxt.setText("Save as .txt");
+        saveImg.setText("Save as PNG");
+        file.add(loadTxt);
+        file.add(saveAsTxt);
         file.add(saveImg);
         editMenu.setText("Edit");
         editWolrdColors.setText("World color");
@@ -408,6 +419,51 @@ public class MainWindow extends JFrame {
                 this.randomAliveCellProbability = (int)randomSpinner.getValue();
             }
         });
+        saveAsTxt.addActionListener((ActionEvent e) -> {
+            runGOL = false;
+            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setToolTipText("Play");
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setMultiSelectionEnabled(false);
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("Configuration as .txt","txt");
+            fileChooser.setFileFilter(filter);
+            int aproveOption = fileChooser.showSaveDialog(this);
+            if(aproveOption == JFileChooser.APPROVE_OPTION){
+                try {
+                    File fileConfiguration = fileChooser.getSelectedFile();
+                    if(!fileConfiguration.getCanonicalPath().endsWith(".txt"))
+                        fileConfiguration = new File(fileChooser.getSelectedFile().getCanonicalPath()+".txt");
+                    BufferedWriter fileConfigurationWriter = new BufferedWriter(new FileWriter(fileConfiguration));
+                    fileConfigurationWriter.write("Rule: "+worldPanel.getWorldPanelRule()+"\n");
+                    fileConfigurationWriter.write("World length: "+worldPanel.getCellsX()+"\n");
+                    fileConfigurationWriter.write("World heigth: "+worldPanel.getCellsY()+"\n");
+                    fileConfigurationWriter.write("World type: "+(worldPanel.isWorldPanelToroidal()?"Toroidal":"Finite")+"\n");
+                    fileConfigurationWriter.write("Generation: "+worldPanel.getWorldPanelGeneration()+"\n");
+                    fileConfigurationWriter.write("Alive cells: "+worldPanel.getWorldPanelAliveCells()+"\n");
+                    fileConfigurationWriter.write("Death cells: "+worldPanel.getWorldPanelDeathCells()+"\n");
+                    fileConfigurationWriter.write("Cell pixels: "+worldPanel.getCellPixels()+"\n");
+                    fileConfigurationWriter.write("Alive cells color: "+worldPanel.getAliveCellsColor().getRed()+","+worldPanel.getAliveCellsColor().getGreen()+","+worldPanel.getAliveCellsColor().getBlue()+"\n");
+                    fileConfigurationWriter.write("Death cells color: "+worldPanel.getDeathCellsColor().getRed()+","+worldPanel.getDeathCellsColor().getGreen()+","+worldPanel.getDeathCellsColor().getBlue()+"\n");
+                    fileConfigurationWriter.write("World:\n");
+                    for(int y=0;y<worldPanel.getCellsY();y++){
+                        for(int x=0;x<worldPanel.getCellsX();x++){
+                            fileConfigurationWriter.write('0'+worldPanel.getWorldPanelCellState(x, y));
+                        }
+                        fileConfigurationWriter.write("\n");
+                    }
+                    fileConfigurationWriter.close();
+                    JOptionPane.showMessageDialog(this,
+                        "Configuration saved succesfully as\n"+fileConfiguration.getCanonicalPath(),
+                        "Configuration saved",
+                        JOptionPane.INFORMATION_MESSAGE);
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(this,
+                    "Error when creating configuration file\nError: "+ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
         saveImg.addActionListener((ActionEvent e) -> {
             runGOL = false;
             pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
@@ -443,6 +499,5 @@ public class MainWindow extends JFrame {
  * TODO: Change world type
  * TODO: Save as txt file
  * TODO: Load from txt file
- * TODO: Save as image
  * TODO: Graphics (Save as CSV files)
  */
