@@ -1,18 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * TheGameOfLife: Java GUI to run game of life like cellular automatas
+ * @author Luis Alejandro Mendoza Franco
+ * Github: luis-ale-117
  */
+
 package com.thegameoflife.thegameoflife;
 
 /**
- *
- * @author lalex
+ * Class that implements all the logic behind Game of life like
+ * cellular automatas
  */
 public class GOLWorld {
     private static final byte DEATH=0;
     private static final byte ALIVE=1;
-    private static final byte[] STATES = {DEATH,ALIVE};
     
     private int deathCells, aliveCells, generation;
     private boolean toroidalWorld;

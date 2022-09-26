@@ -1,7 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * TheGameOfLife: Java GUI to run game of life like cellular automatas
+ * @author Luis Alejandro Mendoza Franco
+ * Github: luis-ale-117
  */
 package com.thegameoflife.thegameoflife;
 
@@ -12,11 +12,9 @@ import java.awt.image.BufferedImage;
 import javax.swing.JLabel;
 
 /**
- *
- * @author lalex
+ * JLabel where the Game of life like cellular automatas are displayed
  */
 public class WorldPanel extends JLabel{
-    private static final int REFRESH_TIME = 200;
     private int pixelsX,pixelsY,zoomPixelsX,zoomPixelsY;
     private int cellPixels,cellsX,cellsY;
     private BufferedImage worldImage;

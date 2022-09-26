@@ -1,7 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * TheGameOfLife: Java GUI to run game of life like cellular automatas
+ * @author Luis Alejandro Mendoza Franco
+ * Github: luis-ale-117
  */
 package com.thegameoflife.thegameoflife;
 
@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -40,8 +41,8 @@ import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
- *
- * @author lalex
+ * JFrame where all Game of life like cellular automatas are shown
+ * Controls and options are in this window
  */
 public class MainWindow extends JFrame {
     private static final int WINDOW_WORLD_LENGTH=1100;
@@ -61,7 +62,6 @@ public class MainWindow extends JFrame {
     private static final int RIGHT_BUTTON_DOWN = MouseEvent.BUTTON1_DOWN_MASK;
     private static final int LEFT_BUTTON_DOWN = MouseEvent.BUTTON3_DOWN_MASK;
     private static final int MOUSE_BUTTON_DOWN = RIGHT_BUTTON_DOWN | LEFT_BUTTON_DOWN;
-    private static final String[] WORLD_TYPES={"Toroidal","Finite"};
     //Components
     private JScrollPane worldScroller;
     private WorldPanel worldPanel;
@@ -74,26 +74,16 @@ public class MainWindow extends JFrame {
     private JComboBox zoomOptions, speedOptions;
     private JLabel zoomIcon,speedIcon,generationLabel,aliveLabel,deathLabel;
     //Others
-    private boolean runGOL, generateRandomFlag, eraseFlag, editFlag, cellEditedFlag, stopRefreshFlag;
+    private boolean runGOL, generateRandomFlag, eraseFlag, editFlag, stopRefreshFlag;
     private double randomAliveCellProbability;
     private int nextStateSpeed, cellsPixels, cellsX,cellsY;
-    private double[] zoomValues = {0.25,0.5,1,1.5,2};
-    private int[] speedValues = {2000,1000,500,100,50,10,0};//Miliseconds
+    private final double[] zoomValues = {0.25,0.5,1,1.5,2};
+    private final int[] speedValues = {2000,1000,500,100,50,10,0};//Miliseconds
     
     
     public MainWindow(){
-        setSize(WINDOW_WORLD_LENGTH,WINDOW_WORLD_HEIGHT);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setTitle("Conway's game of life");
-        setResizable(false);
-        setLayout(null);
-        setIconImage(new ImageIcon("resources/abstractLogo.png").getImage());
-        //Configure all components of the main window for the simulation
-        initComponents();
-        setActions();
-        setVisible(true);
-        
+        super();
+        setWindowSettings();
         randomAliveCellProbability = 10; //10% of alive cells at the beginning
         nextStateSpeed = 100;
         cellsPixels = CELLS_PIXELS;//Default values of the world
@@ -102,6 +92,19 @@ public class MainWindow extends JFrame {
         //Create a random world at the beginning
         worldPanel.generateRandomWorldPanel(10);//10% of alive cells
         setInfoInLabels();
+    }
+    private void setWindowSettings(){
+        setSize(WINDOW_WORLD_LENGTH,WINDOW_WORLD_HEIGHT);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setTitle("Conway's game of life");
+        setResizable(false);
+        setLayout(null);
+        setIconImage(new ImageIcon(getImage("images/abstractLogo.png")).getImage());
+        //Configure all components of the main window for the simulation
+        initComponents();
+        setActions();
+        setVisible(true);
     }
     public void startGOL(){
         while(true){
@@ -210,7 +213,7 @@ public class MainWindow extends JFrame {
         pauseAndPlay.setBorderPainted(false);
         pauseAndPlay.setFocusPainted(false);
         pauseAndPlay.setBackground(Color.white);
-        pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+        pauseAndPlay.setIcon(new ImageIcon(getImage("images/playGreen.png")));
         pauseAndPlay.setCursor(new Cursor(Cursor.HAND_CURSOR));
         pauseAndPlay.setToolTipText("Play");
         pauseAndPlay.setEnabled(true);
@@ -220,7 +223,7 @@ public class MainWindow extends JFrame {
         edit.setBorderPainted(false);
         edit.setFocusPainted(false);
         edit.setBackground(Color.white);
-        edit.setIcon(new ImageIcon("resources/editYellow.png"));
+        edit.setIcon(new ImageIcon(getImage("images/editYellow.png")));
         edit.setCursor(new Cursor(Cursor.HAND_CURSOR));
         edit.setToolTipText("Edit");
         edit.setEnabled(true);
@@ -230,7 +233,7 @@ public class MainWindow extends JFrame {
         random.setBorderPainted(false);
         random.setFocusPainted(false);
         random.setBackground(Color.white);
-        random.setIcon(new ImageIcon("resources/randomPinkBlue.png"));
+        random.setIcon(new ImageIcon(getImage("images/randomPinkBlue.png")));
         random.setCursor(new Cursor(Cursor.HAND_CURSOR));
         random.setToolTipText("Random");
         random.setEnabled(true);
@@ -240,7 +243,7 @@ public class MainWindow extends JFrame {
         erase.setBorderPainted(false);
         erase.setFocusPainted(false);
         erase.setBackground(Color.white);
-        erase.setIcon(new ImageIcon("resources/eraseAqua.png"));
+        erase.setIcon(new ImageIcon(getImage("images/eraseAqua.png")));
         erase.setCursor(new Cursor(Cursor.HAND_CURSOR));
         erase.setToolTipText("Erase");
         erase.setEnabled(true);
@@ -248,7 +251,7 @@ public class MainWindow extends JFrame {
         zoomIcon = new JLabel();
         zoomIcon.setBounds(BUTTON_LENGTH*6-10, 0, BUTTON_LENGTH,TOOLBAR_SIZE );
         zoomIcon.setBackground(Color.white);
-        zoomIcon.setIcon(new ImageIcon("resources/zoomBlue.png"));
+        zoomIcon.setIcon(new ImageIcon(getImage("images/zoomBlue.png")));
         zoomIcon.setEnabled(true);
         zoomOptions = new JComboBox<String>();
         zoomOptions.setBounds(BUTTON_LENGTH*7-10, 0, COMBOBOX_LENGTH, TOOLBAR_SIZE);
@@ -262,7 +265,7 @@ public class MainWindow extends JFrame {
         speedIcon = new JLabel();
         speedIcon.setBounds(BUTTON_LENGTH*7+COMBOBOX_LENGTH-5, 0, BUTTON_LENGTH,TOOLBAR_SIZE );
         speedIcon.setBackground(Color.white);
-        speedIcon.setIcon(new ImageIcon("resources/speedColors.png"));
+        speedIcon.setIcon(new ImageIcon(getImage("images/speedColors.png")));
         speedIcon.setEnabled(true);
         speedOptions = new JComboBox<String>();
         speedOptions.setBounds(BUTTON_LENGTH*8+COMBOBOX_LENGTH-10, 0, COMBOBOX_LENGTH, TOOLBAR_SIZE);
@@ -278,7 +281,7 @@ public class MainWindow extends JFrame {
         ruleButton.setBackground(Color.white);
         ruleButton.setBorderPainted(false);
         ruleButton.setFocusPainted(false);
-        ruleButton.setIcon(new ImageIcon("resources/ruleColors.png"));
+        ruleButton.setIcon(new ImageIcon(getImage("images/ruleColors.png")));
         ruleButton.setHorizontalAlignment(SwingConstants.LEFT);
         ruleButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         ruleButton.setToolTipText("Applied rule");
@@ -286,19 +289,19 @@ public class MainWindow extends JFrame {
         //Generation label
         generationLabel = new JLabel("Gen: 0");
         generationLabel.setBounds(WINDOW_WORLD_LENGTH-LABEL_LENGTH*3-15, 0, LABEL_LENGTH,TOOLBAR_SIZE );
-        generationLabel.setIcon(new ImageIcon("resources/timePurplePink.png"));
+        generationLabel.setIcon(new ImageIcon(getImage("images/timePurplePink.png")));
         generationLabel.setToolTipText("Generation");
         generationLabel.setEnabled(true);
         //Alive cells label
         aliveLabel = new JLabel("Alive: ");
         aliveLabel.setBounds(WINDOW_WORLD_LENGTH-LABEL_LENGTH*2-15, 0, LABEL_LENGTH,TOOLBAR_SIZE );
-        aliveLabel.setIcon(new ImageIcon("resources/aliveRed.png"));
+        aliveLabel.setIcon(new ImageIcon(getImage("images/aliveRed.png")));
         aliveLabel.setToolTipText("Alive cells");
         aliveLabel.setEnabled(true);
         //Death cells label
         deathLabel = new JLabel("Death: ");
         deathLabel.setBounds(WINDOW_WORLD_LENGTH-LABEL_LENGTH-15, 0, LABEL_LENGTH,TOOLBAR_SIZE );
-        deathLabel.setIcon(new ImageIcon("resources/deathGreen.png"));
+        deathLabel.setIcon(new ImageIcon(getImage("images/deathGreen.png")));
         deathLabel.setToolTipText("Death cells");
         deathLabel.setEnabled(true);
         //Toolbar
@@ -326,24 +329,24 @@ public class MainWindow extends JFrame {
     public void setActions(){
         pauseAndPlay.addActionListener((ActionEvent e) -> {
             runGOL = !runGOL;
-            pauseAndPlay.setIcon(runGOL ? new ImageIcon("resources/pauseRed.png") : new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setIcon(runGOL ? new ImageIcon(getImage("images/pauseRed.png")) : new ImageIcon(getImage("images/playGreen.png")));
             pauseAndPlay.setToolTipText(runGOL ? "Pause" : "Play");
         });
         edit.addActionListener((ActionEvent e) -> {
             runGOL = false;
-            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setIcon(new ImageIcon(getImage("images/playGreen.png")));
             pauseAndPlay.setToolTipText("Play");
             if(pauseAndPlay.isEnabled()){
                 pauseAndPlay.setEnabled(false);
                 random.setEnabled(false);
                 erase.setEnabled(false);
-                edit.setIcon(new ImageIcon("resources/uneditYellow.png"));
+                edit.setIcon(new ImageIcon(getImage("images/uneditYellow.png")));
                 edit.setToolTipText("Stop edition");
             }else{
                 pauseAndPlay.setEnabled(true);
                 random.setEnabled(true);
                 erase.setEnabled(true);
-                edit.setIcon(new ImageIcon("resources/editYellow.png"));
+                edit.setIcon(new ImageIcon(getImage("images/editYellow.png")));
                 edit.setToolTipText("Edit");
             }
             editFlag = !editFlag;
@@ -374,13 +377,13 @@ public class MainWindow extends JFrame {
         });
         random.addActionListener((ActionEvent e) -> {
             runGOL = false;
-            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setIcon(new ImageIcon(getImage("images/playGreen.png")));
             pauseAndPlay.setToolTipText("Play");
             generateRandomFlag = true;
         });
         erase.addActionListener((ActionEvent e) -> {
             runGOL = false;
-            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setIcon(new ImageIcon(getImage("images/playGreen.png")));
             pauseAndPlay.setToolTipText("Play");
             eraseFlag = true;
         });
@@ -393,7 +396,7 @@ public class MainWindow extends JFrame {
         });
         ruleButton.addActionListener((ActionEvent e) -> {
             runGOL = false;
-            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setIcon(new ImageIcon(getImage("images/playGreen.png")));
             pauseAndPlay.setToolTipText("Play");
             JTextField bornRule, surviveRule;
             bornRule = new JTextField(worldPanel.getWorldPanelBornRule());
@@ -404,7 +407,7 @@ public class MainWindow extends JFrame {
             ruleItems[2] = bornRule;
             ruleItems[3] = "Survive";
             ruleItems[4] = surviveRule;
-            int okOption = JOptionPane.showOptionDialog(this, ruleItems, "Rules", JOptionPane.OK_OPTION, JOptionPane.QUESTION_MESSAGE, new ImageIcon("resources/ruleRed.png"), null, null);
+            int okOption = JOptionPane.showOptionDialog(this, ruleItems, "Rules", JOptionPane.OK_OPTION, JOptionPane.QUESTION_MESSAGE, new ImageIcon(getImage("images/ruleRed.png")), null, null);
             if(okOption == JOptionPane.OK_OPTION){
                 worldPanel.setWorldPanelRule(bornRule.getText(), surviveRule.getText());
                 ruleButton.setText(worldPanel.getWorldPanelRule());
@@ -413,7 +416,7 @@ public class MainWindow extends JFrame {
         editWorldColors.addActionListener((ActionEvent e) -> {
             runGOL = false;
             stopRefreshFlag = true;
-            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setIcon(new ImageIcon(getImage("images/playGreen.png")));
             pauseAndPlay.setToolTipText("Play");
             JColorChooser aliveColorChooser = new JColorChooser(Color.WHITE);//Black by default
             int aliveColorOption = JOptionPane.showOptionDialog(this, aliveColorChooser, "Choose alive cell color", JOptionPane.CLOSED_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
@@ -433,7 +436,7 @@ public class MainWindow extends JFrame {
         editWorldDimensions.addActionListener((ActionEvent e) -> {
             runGOL = false;
             stopRefreshFlag = true;
-            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setIcon(new ImageIcon(getImage("images/playGreen.png")));
             pauseAndPlay.setToolTipText("Play");
             SpinnerNumberModel spModelX = new SpinnerNumberModel(cellsX, 3, 10000, 1);
             SpinnerNumberModel spModelY = new SpinnerNumberModel(cellsY, 3, 10000, 1);
@@ -451,7 +454,7 @@ public class MainWindow extends JFrame {
             dimensionItems[5] = "Pixels per cell";
             dimensionItems[6] = cellPixelsSpinner;
             dimensionItems[7] = "WARNING: Changing length or height\nwill create a new blank world with\nthe specified dimensions";
-            int okOption = JOptionPane.showOptionDialog(this, dimensionItems, "World dimensions", JOptionPane.OK_OPTION, JOptionPane.QUESTION_MESSAGE, new ImageIcon("resources/settings.png"), null, null);
+            int okOption = JOptionPane.showOptionDialog(this, dimensionItems, "World dimensions", JOptionPane.OK_OPTION, JOptionPane.QUESTION_MESSAGE, new ImageIcon(getImage("images/settings.png")), null, null);
             if(okOption == JOptionPane.OK_OPTION){
                 //If user changed any dimension value
                 if(cellsPixels!=(int)cellPixelsSpinner.getValue() || cellsX!=(int)cellsXSpinner.getValue() || cellsY!=(int)cellsYSpinner.getValue()){
@@ -476,7 +479,7 @@ public class MainWindow extends JFrame {
         editWorldType.addActionListener((ActionEvent e) -> {
             runGOL = false;
             stopRefreshFlag = true;
-            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setIcon(new ImageIcon(getImage("images/playGreen.png")));
             pauseAndPlay.setToolTipText("Play");
             JComboBox typeComboBox = new JComboBox<String>();
             typeComboBox.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -525,7 +528,7 @@ public class MainWindow extends JFrame {
         });
         saveAsTxt.addActionListener((ActionEvent e) -> {
             runGOL = false;
-            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setIcon(new ImageIcon(getImage("images/playGreen.png")));
             pauseAndPlay.setToolTipText("Play");
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setMultiSelectionEnabled(false);
@@ -571,7 +574,7 @@ public class MainWindow extends JFrame {
         loadTxt.addActionListener((ActionEvent e) -> {
             runGOL = false;
             stopRefreshFlag = true;
-            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setIcon(new ImageIcon(getImage("images/playGreen.png")));
             pauseAndPlay.setToolTipText("Play");
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setMultiSelectionEnabled(false);
@@ -716,7 +719,7 @@ public class MainWindow extends JFrame {
         });
         saveImg.addActionListener((ActionEvent e) -> {
             runGOL = false;
-            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setIcon(new ImageIcon(getImage("images/playGreen.png")));
             pauseAndPlay.setToolTipText("Play");
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setMultiSelectionEnabled(false);
@@ -742,13 +745,7 @@ public class MainWindow extends JFrame {
             }
         });
     }
+    private static URL getImage(final String pathAndFileName) {
+        return Thread.currentThread().getContextClassLoader().getResource(pathAndFileName);
+    }
 }
-/**
- * TODO: Change cell pixels - OK
- * TODO: Change cells number - OK
- * TODO: Change world type - OK
- * TODO: Save as txt file - OK
- * TODO: Save as PNG image - OK
- * TODO: Load from txt file - OK
- * TODO: Graphics (Save as CSV files)
- */
