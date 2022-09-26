@@ -12,8 +12,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import javax.imageio.ImageIO;
@@ -66,7 +68,7 @@ public class MainWindow extends JFrame {
     private JMenuBar menuBar;
     private JMenu file,editMenu;
     private JMenuItem loadTxt,saveAsTxt,saveImg;
-    private JMenuItem editWorldColors,editWroldType,editWorldDimensions,randomness;
+    private JMenuItem editWorldColors,editWorldType,editWorldDimensions,randomness;
     private JToolBar toolbar;
     private JButton pauseAndPlay,edit,random,erase,ruleButton;
     private JComboBox zoomOptions, speedOptions;
@@ -168,7 +170,7 @@ public class MainWindow extends JFrame {
         saveImg = new JMenuItem();
         file =  new JMenu();
         editWorldColors = new JMenuItem();
-        editWroldType = new JMenuItem();
+        editWorldType = new JMenuItem();
         randomness = new JMenuItem();
         editWorldDimensions = new JMenuItem();
         editMenu =  new JMenu();
@@ -182,11 +184,11 @@ public class MainWindow extends JFrame {
         file.add(saveImg);
         editMenu.setText("Edit");
         editWorldColors.setText("World color");
-        editWroldType.setText("World type");
+        editWorldType.setText("World type");
         editWorldDimensions.setText("World dimensions");
         randomness.setText("Randomness");
         editMenu.add(editWorldColors);
-        editMenu.add(editWroldType);
+        editMenu.add(editWorldType);
         editMenu.add(editWorldDimensions);
         editMenu.add(randomness);
         menuBar.add(file);
@@ -418,13 +420,13 @@ public class MainWindow extends JFrame {
             if (aliveColorOption == JOptionPane.CLOSED_OPTION){
                 return;
             }
-            worldPanel.setAliveColor(aliveColorChooser.getColor());
+            worldPanel.setWorldPanelAliveColor(aliveColorChooser.getColor());
             JColorChooser deathColorChooser = new JColorChooser(Color.WHITE);//White by default
             int deathColorOption = JOptionPane.showOptionDialog(null, deathColorChooser, "Choose death cell color", JOptionPane.CLOSED_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
             if (deathColorOption == JOptionPane.CLOSED_OPTION){
                 return;
             }
-            worldPanel.setDeathColor(deathColorChooser.getColor());
+            worldPanel.setWorldPanelDeathColor(deathColorChooser.getColor());
             worldPanel.paintAllWorldPanel();
             stopRefreshFlag = false;
         });
@@ -471,6 +473,45 @@ public class MainWindow extends JFrame {
             }
             stopRefreshFlag = false;
         });
+        editWorldType.addActionListener((ActionEvent e) -> {
+            runGOL = false;
+            stopRefreshFlag = true;
+            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setToolTipText("Play");
+            JComboBox typeComboBox = new JComboBox<String>();
+            typeComboBox.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            typeComboBox.addItem("Toroidal");
+            typeComboBox.addItem("Finite");
+            typeComboBox.setSelectedItem(worldPanel.isWorldPanelToroidal()?"Toroidal":"Finite");
+            Object[] typeItems= new Object[2];
+            typeItems[0] = "Set world type";
+            typeItems[1] = typeComboBox;
+            int okOption = JOptionPane.showOptionDialog(this, typeItems, "World type", JOptionPane.OK_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+            if(okOption == JOptionPane.OK_OPTION){
+                if(typeComboBox.getSelectedItem().equals("Toroidal")){
+                    worldPanel.setWorldPanelToroidal(true);
+                }else if(typeComboBox.getSelectedItem().equals("Finite")){
+                    JComboBox borderStateComboBox = new JComboBox<String>();
+                    borderStateComboBox.addItem("Alive");
+                    borderStateComboBox.addItem("Death");
+                    borderStateComboBox.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                    borderStateComboBox.setSelectedItem(worldPanel.isWorldPanelNonToroidalStateAlive()?"Alive":"Death");
+                    Object[] borderStateItems= new Object[2];
+                    borderStateItems[0] = "Set state of cells out of the border";
+                    borderStateItems[1] = borderStateComboBox;
+                    okOption = JOptionPane.showOptionDialog(this, borderStateItems, "Border cells state", JOptionPane.OK_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+                    if(okOption == JOptionPane.OK_OPTION){
+                        worldPanel.setWorldPanelToroidal(false);
+                        if(borderStateComboBox.getSelectedItem().equals("Alive")){
+                            worldPanel.setWorldPanelNonToroidalStateAsAlive();
+                        }else if(borderStateComboBox.getSelectedItem().equals("Death")){
+                            worldPanel.setWorldPanelNonToroidalStateAsDeath();
+                        }
+                    }
+                }
+            }
+            stopRefreshFlag = false;
+        });
         randomness.addActionListener((ActionEvent e) -> {
             SpinnerNumberModel spModel = new SpinnerNumberModel(10, 0, 100, 1);
             JSpinner randomSpinner = new JSpinner(spModel);
@@ -499,8 +540,8 @@ public class MainWindow extends JFrame {
                     BufferedWriter fileConfigurationWriter = new BufferedWriter(new FileWriter(fileConfiguration));
                     fileConfigurationWriter.write("Rule: "+worldPanel.getWorldPanelRule()+"\n");
                     fileConfigurationWriter.write("World length: "+worldPanel.getCellsX()+"\n");
-                    fileConfigurationWriter.write("World heigth: "+worldPanel.getCellsY()+"\n");
-                    fileConfigurationWriter.write("World type: "+(worldPanel.isWorldPanelToroidal()?"Toroidal":"Finite")+"\n");
+                    fileConfigurationWriter.write("World height: "+worldPanel.getCellsY()+"\n");
+                    fileConfigurationWriter.write("World type: "+(worldPanel.isWorldPanelToroidal()?"Toroidal":worldPanel.isWorldPanelNonToroidalStateAlive()?"Finite_alive":"Finite_death")+"\n");
                     fileConfigurationWriter.write("Generation: "+worldPanel.getWorldPanelGeneration()+"\n");
                     fileConfigurationWriter.write("Alive cells: "+worldPanel.getWorldPanelAliveCells()+"\n");
                     fileConfigurationWriter.write("Death cells: "+worldPanel.getWorldPanelDeathCells()+"\n");
@@ -526,6 +567,152 @@ public class MainWindow extends JFrame {
                     JOptionPane.ERROR_MESSAGE);
                 }
             }
+        });
+        loadTxt.addActionListener((ActionEvent e) -> {
+            runGOL = false;
+            stopRefreshFlag = true;
+            pauseAndPlay.setIcon(new ImageIcon("resources/playGreen.png"));
+            pauseAndPlay.setToolTipText("Play");
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setMultiSelectionEnabled(false);
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("Configuration as .txt","txt");
+            fileChooser.setFileFilter(filter);
+            int aproveOption = fileChooser.showOpenDialog(this);
+            if(aproveOption == JFileChooser.APPROVE_OPTION){
+                try {
+                    File fileConfiguration = fileChooser.getSelectedFile();
+                    if(!fileConfiguration.getCanonicalPath().endsWith(".txt"))  return;
+                    String line;
+                    String[] lineSections;
+                    BufferedReader fileConfigurationReader = new BufferedReader(new FileReader(fileConfiguration));
+                    //Get world rule
+                    String bornRule,surviveRule;
+                    line = fileConfigurationReader.readLine();
+                    lineSections = line.split(":");
+                    if(lineSections.length==2 && lineSections[0].equals("Rule")){
+                        lineSections = lineSections[1].split("/");
+                        if(lineSections.length != 2) throw new IOException("Error in Rule format");
+                        bornRule = lineSections[0].strip().substring(1);
+                        surviveRule = lineSections[1].strip().substring(1);
+                    }else throw new IOException("Error in Rule format");
+                    //Get world length and height
+                    int worldLength, worldHeight;
+                    line = fileConfigurationReader.readLine();
+                    lineSections = line.split(":");
+                    if(lineSections.length==2 && lineSections[0].equals("World length")){
+                        worldLength = Integer.parseInt(lineSections[1].strip());
+                    }else throw new IOException("Error in World length format");
+                    line = fileConfigurationReader.readLine();
+                    lineSections = line.split(":");
+                    if(lineSections.length==2 && lineSections[0].equals("World height")){
+                        worldHeight = Integer.parseInt(lineSections[1].strip());
+                    }else throw new IOException("Error in World height format");
+                    //Get world type
+                    String worldType;
+                    line = fileConfigurationReader.readLine();
+                    lineSections = line.split(":");
+                    if(lineSections.length==2 && lineSections[0].equals("World type")){
+                        worldType = lineSections[1].strip();
+                    }else throw new IOException("Error in World type format");
+                    //Get generation
+                    int generation;
+                    line = fileConfigurationReader.readLine();
+                    lineSections = line.split(":");
+                    if(lineSections.length==2 && lineSections[0].equals("Generation")){
+                        generation = Integer.parseInt(lineSections[1].strip());
+                    }else throw new IOException("Error in Generation format");
+                    //Get alive cells
+                    int aliveCells;
+                    line = fileConfigurationReader.readLine();
+                    lineSections = line.split(":");
+                    if(lineSections.length==2 && lineSections[0].equals("Alive cells")){
+                        aliveCells = Integer.parseInt(lineSections[1].strip());
+                    }else throw new IOException("Error in Alive cells format");
+                    //Get death cells
+                    int deathCells;
+                    line = fileConfigurationReader.readLine();
+                    lineSections = line.split(":");
+                    if(lineSections.length==2 && lineSections[0].equals("Death cells")){
+                        deathCells = Integer.parseInt(lineSections[1].strip());
+                    }else throw new IOException("Error in Death cells format");
+                    //Get cell pixels
+                    int cellPixels;
+                    line = fileConfigurationReader.readLine();
+                    lineSections = line.split(":");
+                    if(lineSections.length==2 && lineSections[0].equals("Cell pixels")){
+                        cellPixels = Integer.parseInt(lineSections[1].strip());
+                    }else throw new IOException("Error in Cell pixels format");
+                    //Get alive cells color
+                    int aliveColorRed,aliveColorGreen,aliveColorBlue;
+                    line = fileConfigurationReader.readLine();
+                    lineSections = line.split(":");
+                    if(lineSections.length==2 && lineSections[0].equals("Alive cells color")){
+                        lineSections = lineSections[1].strip().split(",");
+                        if(lineSections.length != 3) throw new IOException("Error in configuration format");
+                        aliveColorRed = Integer.parseInt(lineSections[0].strip());
+                        aliveColorGreen = Integer.parseInt(lineSections[1].strip());
+                        aliveColorBlue = Integer.parseInt(lineSections[2].strip());
+                    }else throw new IOException("Error in Alive cells color format");
+                    //Get death cells color
+                    int deathColorRed,deathColorGreen,deathColorBlue;
+                    line = fileConfigurationReader.readLine();
+                    lineSections = line.split(":");
+                    if(lineSections.length==2 && lineSections[0].equals("Death cells color")){
+                        lineSections = lineSections[1].strip().split(",");
+                        if(lineSections.length != 3) throw new IOException("Error in Death cells color format");
+                        deathColorRed = Integer.parseInt(lineSections[0].strip());
+                        deathColorGreen = Integer.parseInt(lineSections[1].strip());
+                        deathColorBlue = Integer.parseInt(lineSections[2].strip());
+                    }else throw new IOException("Error in Death cells color format");
+                    //Set world settings
+                    worldPanel.setWorldPanelSettings(cellPixels, worldLength, worldHeight);
+                    if(worldType.equals("Toroidal")) worldPanel.setWorldPanelToroidal(true);
+                    else if(worldType.equals("Finite_alive")){
+                        worldPanel.setWorldPanelToroidal(false);
+                        worldPanel.setWorldPanelNonToroidalStateAsAlive();
+                    }
+                    else if(worldType.equals("Finite_death")){
+                        worldPanel.setWorldPanelToroidal(false);
+                        worldPanel.setWorldPanelNonToroidalStateAsDeath();
+                    }
+                    else throw new IOException("Error in World type format");
+                    worldPanel.setWorldPanelRule(bornRule, surviveRule);
+                    worldPanel.setWorldPanelGeneration(generation);
+                    worldPanel.setWorldPanelAliveColor(new Color(aliveColorRed,aliveColorGreen,aliveColorBlue));
+                    worldPanel.setWorldPanelDeathColor(new Color(deathColorRed,deathColorGreen,deathColorBlue));
+                    //Get world cells
+                    line = fileConfigurationReader.readLine();
+                    if(!line.equals("World:")) throw new IOException("Error in World format");
+                    char[] cellsRow;
+                    for(int y=0;y<worldHeight;y++){
+                        line = fileConfigurationReader.readLine();
+                        if(line.length()!=worldLength) throw new IOException("Error in World format");
+                        cellsRow = line.toCharArray();
+                        for(int x=0;x<worldLength;x++){
+                            if(cellsRow[x] == '1') worldPanel.setWorldPanelCellAsAliveNoPaint(x, y);
+                            else worldPanel.setWorldPanelCellAsDeathNoPaint(x, y);
+                        }
+                    }
+                    fileConfigurationReader.close();
+                    if(worldPanel.getWorldPanelAliveCells()!=aliveCells || worldPanel.getWorldPanelDeathCells()!=deathCells)
+                        throw new IOException("Error. Incompatibility between alive cells,\ndeath cells and world in file");
+                    setInfoInLabels();
+                    zoomOptions.setSelectedItem("100%");
+                    worldScroller.setViewportView(worldPanel);
+                    worldPanel.paintAllWorldPanel();
+                    ruleButton.setText(worldPanel.getWorldPanelRule());
+                    JOptionPane.showMessageDialog(this,
+                        "Configuration file loaded succesfully\nFile: "+fileConfiguration.getName(),
+                        "Configuration loaded",
+                        JOptionPane.INFORMATION_MESSAGE);
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(this,
+                    "Error when creating configuration file\nError: "+ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            stopRefreshFlag = false;
         });
         saveImg.addActionListener((ActionEvent e) -> {
             runGOL = false;
@@ -559,9 +746,9 @@ public class MainWindow extends JFrame {
 /**
  * TODO: Change cell pixels - OK
  * TODO: Change cells number - OK
- * TODO: Change world type
+ * TODO: Change world type - OK
  * TODO: Save as txt file - OK
  * TODO: Save as PNG image - OK
- * TODO: Load from txt file
+ * TODO: Load from txt file - OK
  * TODO: Graphics (Save as CSV files)
  */

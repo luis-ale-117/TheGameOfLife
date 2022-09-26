@@ -130,17 +130,44 @@ public class WorldPanel extends JLabel{
         }
         repaint();
     }
-    public byte getWorldPanelCellState(int x, int y){
-        return world.getCellState(x, y);
+    public void setWorldPanelCellAsAliveNoPaint(int x, int y){
+            world.setCellAsAlive(x, y);
     }
-    public void setWorldPanelAsToroidal(){
-        world.setToroidal();
+    public void setWorldPanelCellAsDeathNoPaint(int x, int y){
+            world.setCellAsDeath(x, y);
+    }
+    public void setWorldPanelToroidal(boolean toroidal){
+        world.setToroidal(toroidal);
+    }
+    public void setWorldPanelNonToroidalStateAsAlive(){
+        world.setNonToroidalBorderStateAsAlive();
+    }
+    public void setWorldPanelNonToroidalStateAsDeath(){
+        world.setNonToroidalBorderStateAsDeath();
     }
     public boolean isWorldPanelToroidal(){
         return world.isToroidal();
     }
+    public boolean isWorldPanelNonToroidalStateAlive(){
+        return world.isNonToroidalBorderStateAlive();
+    }
+    public boolean isWorldPanelNonToroidalStateDeath(){
+        return world.isNonToroidalBorderStateDeath();
+    }
     public void setWorldPanelRule(String bornRule, String surviveRule){
         world.setRule(bornRule, surviveRule);
+    }
+    public void setWorldPanelGeneration(int generation){
+        world.setGeneration(generation);
+    }
+    public void setWorldPanelAliveCells(int aliveCells){
+        world.setAliveCells(aliveCells);
+    }
+    public void setWorldPanelDeathCells(int deathCells){
+        world.setAliveCells(deathCells);
+    }
+    public byte getWorldPanelCellState(int x, int y){
+        return world.getCellState(x, y);
     }
     public String getWorldPanelRule(){
         return world.getRuleAsString();
@@ -166,10 +193,10 @@ public class WorldPanel extends JLabel{
     public String getWorldPanelSurviveRule(){
         return world.getSurviveRule();
     }
-    public void setAliveColor(Color aliveColor) {
+    public void setWorldPanelAliveColor(Color aliveColor) {
         this.aliveColor = aliveColor;
     }
-    public void setDeathColor(Color deathColor) {
+    public void setWorldPanelDeathColor(Color deathColor) {
         this.deathColor = deathColor;
     }
     public BufferedImage getWorldImage() {

@@ -35,11 +35,8 @@ public class GOLWorld {
         setRule("3","23");
         nonToroidalBorderState = DEATH;
     }
-    public void setToroidal(){
-        toroidalWorld = true;
-    }
-    public void unsetToroidal(){
-        toroidalWorld = false;
+    public void setToroidal(boolean toroidal){
+        toroidalWorld = toroidal;
     }
     public boolean isToroidal(){
         return toroidalWorld;
@@ -71,6 +68,12 @@ public class GOLWorld {
     public void setNonToroidalBorderStateAsDeath(){
         nonToroidalBorderState = DEATH;
     }
+    public boolean isNonToroidalBorderStateAlive(){
+        return nonToroidalBorderState == ALIVE;
+    }
+    public boolean isNonToroidalBorderStateDeath(){
+        return nonToroidalBorderState == DEATH;
+    }
     private void nextCellState(int x1, int y1){
         int aliveNeighboors, y0, y2, x0, x2;
         if(toroidalWorld){
@@ -86,14 +89,14 @@ public class GOLWorld {
             y2 = y1+1;
             x0 = x1-1;
             x2 = x1+1;
-            aliveNeighboors = y0<0 || x0<0?                   nonToroidalBorderState : currentWorld[y0][x0] +
-                              y0<0?                           nonToroidalBorderState : currentWorld[y0][x1] +
-                              y0<0 || x2>=gridSizeX?          nonToroidalBorderState : currentWorld[y0][x2] +
-                              x0<0?                           nonToroidalBorderState : currentWorld[y1][x0] +
-                              x2>=gridSizeX?                  nonToroidalBorderState : currentWorld[y1][x2] +
-                              y2>=gridSizeY || x0<0?          nonToroidalBorderState : currentWorld[y2][x0] +
-                              y2>=gridSizeY ?                 nonToroidalBorderState : currentWorld[y2][x1] +
-                              y2>=gridSizeY || x2>=gridSizeX? nonToroidalBorderState : currentWorld[y2][x2];
+            aliveNeighboors = (y0<0 || x0<0?                   nonToroidalBorderState : currentWorld[y0][x0]) +
+                              (y0<0?                           nonToroidalBorderState : currentWorld[y0][x1]) +
+                              (y0<0 || x2>=gridSizeX?          nonToroidalBorderState : currentWorld[y0][x2]) +
+                              (x0<0?                           nonToroidalBorderState : currentWorld[y1][x0]) +
+                              (x2>=gridSizeX?                  nonToroidalBorderState : currentWorld[y1][x2]) +
+                              (y2>=gridSizeY || x0<0?          nonToroidalBorderState : currentWorld[y2][x0]) +
+                              (y2>=gridSizeY ?                 nonToroidalBorderState : currentWorld[y2][x1]) +
+                              (y2>=gridSizeY || x2>=gridSizeX? nonToroidalBorderState : currentWorld[y2][x2]);
         }
         
         //Apply born rule
@@ -147,6 +150,17 @@ public class GOLWorld {
             deathCells++;
         }
         currentWorld[y][x] = DEATH;
+    }
+    public void setDeathCells(int deathCells) {
+        this.deathCells = deathCells;
+    }
+
+    public void setAliveCells(int aliveCells) {
+        this.aliveCells = aliveCells;
+    }
+
+    public void setGeneration(int generation) {
+        this.generation = generation;
     }
     public byte getCellState(int x, int y){
         return currentWorld[y][x];
